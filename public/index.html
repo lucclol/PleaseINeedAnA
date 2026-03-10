@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Give Evan an A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#08080f;--lane:#0e0e1a;--border:#1a1a30;
+    --left:#ff3a6e;--down:#00e5ff;--up:#39ff14;--right:#ffaa00;
+    --hit-zone:rgba(255,255,255,0.04);
+    --glow-left:rgba(255,58,110,0.6);--glow-down:rgba(0,229,255,0.6);
+    --glow-up:rgba(57,255,20,0.6);--glow-right:rgba(255,170,0,0.6);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;user-select:none}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 6px)}
+
+  .header{padding:10px 0 2px;text-align:center;z-index:10;flex-shrink:0}
+  .header h1{font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,32px);font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,var(--left),var(--down),var(--up),var(--right));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+  .hud{display:flex;gap:clamp(20px,5vw,50px);padding:4px 0 6px;font-family:'Orbitron',monospace;z-index:10;flex-shrink:0}
+  .hud-item{text-align:center}
+  .hud-label{font-size:9px;color:#444;letter-spacing:2px}
+  .hud-value{font-size:clamp(18px,2.5vw,28px);font-weight:700}
+  #hud-score{color:#fff}#hud-combo{color:var(--up)}#hud-streak{color:var(--right)}
+
+  .progress-wrap{width:100%;max-width:700px;height:3px;background:rgba(255,255,255,0.03);flex-shrink:0;z-index:10}
+  .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--left),var(--down),var(--up),var(--right));transition:width .3s linear}
+
+  .game-wrap{flex:1;display:flex;justify-content:center;align-items:stretch;width:100%;max-width:700px;position:relative;overflow:hidden;min-height:0;transition:transform .05s}
+  .game-wrap.shake{animation:screenShake .15s ease-out}
+  @keyframes screenShake{0%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:translateX(0)}}
+
+  .lane{flex:1;background:var(--lane);border-left:1px solid var(--border);border-right:1px solid var(--border);position:relative;overflow:hidden}
+
+  /* TALL hit zone — visually forgiving */
+  .hit-zone{position:absolute;bottom:50px;left:0;right:0;height:120px;background:var(--hit-zone);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;z-index:5}
+  /* Soft gradient edges so it doesn't feel like a hard line */
+  .hit-zone::before{content:'';position:absolute;top:-40px;left:0;right:0;height:40px;background:linear-gradient(to bottom,transparent,var(--hit-zone))}
+  .hit-zone::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:20px;background:linear-gradient(to top,transparent,var(--hit-zone))}
+
+  .target-arrow{font-size:clamp(38px,6vw,56px);opacity:0.15;filter:grayscale(1);transition:opacity .08s,filter .08s,transform .08s}
+  .target-arrow.hit{opacity:1!important;filter:grayscale(0)!important;transform:scale(1.4)}
+  .lane[data-dir="left"] .target-arrow{color:var(--left)}
+  .lane[data-dir="down"] .target-arrow{color:var(--down)}
+  .lane[data-dir="up"] .target-arrow{color:var(--up)}
+  .lane[data-dir="right"] .target-arrow{color:var(--right)}
+
+  .lane-label{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-family:'Orbitron',monospace;font-size:clamp(9px,1.3vw,13px);letter-spacing:3px;opacity:0.3;z-index:5}
+  .lane[data-dir="left"] .lane-label{color:var(--left)}
+  .lane[data-dir="down"] .lane-label{color:var(--down)}
+  .lane[data-dir="up"] .lane-label{color:var(--up)}
+  .lane[data-dir="right"] .lane-label{color:var(--right)}
+
+  /* Arrows with glow pulse near hit zone */
+  .arrow{position:absolute;left:50%;transform:translateX(-50%);font-size:clamp(42px,6.5vw,60px);z-index:3;will-change:top,opacity,text-shadow;transition:none}
+  .lane[data-dir="left"] .arrow{color:var(--left)}
+  .lane[data-dir="down"] .arrow{color:var(--down)}
+  .lane[data-dir="up"] .arrow{color:var(--up)}
+  .lane[data-dir="right"] .arrow{color:var(--right)}
+
+  .lane-glow{position:absolute;bottom:50px;left:0;right:0;height:180px;opacity:0;transition:opacity .12s;pointer-events:none;z-index:2}
+  .lane[data-dir="left"] .lane-glow{background:linear-gradient(to top,var(--glow-left),transparent)}
+  .lane[data-dir="down"] .lane-glow{background:linear-gradient(to top,var(--glow-down),transparent)}
+  .lane[data-dir="up"] .lane-glow{background:linear-gradient(to top,var(--glow-up),transparent)}
+  .lane[data-dir="right"] .lane-glow{background:linear-gradient(to top,var(--glow-right),transparent)}
+
+  /* Flash overlay on hit */
+  .lane-flash{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:8;transition:opacity .08s}
+  .lane[data-dir="left"] .lane-flash{background:radial-gradient(ellipse at 50% 80%,rgba(255,58,110,0.25),transparent 70%)}
+  .lane[data-dir="down"] .lane-flash{background:radial-gradient(ellipse at 50% 80%,rgba(0,229,255,0.25),transparent 70%)}
+  .lane[data-dir="up"] .lane-flash{background:radial-gradient(ellipse at 50% 80%,rgba(57,255,20,0.25),transparent 70%)}
+  .lane[data-dir="right"] .lane-flash{background:radial-gradient(ellipse at 50% 80%,rgba(255,170,0,0.25),transparent 70%)}
+
+  .hit-text{position:absolute;bottom:185px;left:0;right:0;text-align:center;font-family:'Orbitron',monospace;font-size:clamp(15px,2.2vw,22px);font-weight:700;letter-spacing:2px;opacity:0;z-index:20;pointer-events:none}
+  .hit-text.perfect{color:var(--up)}.hit-text.good{color:var(--down)}.hit-text.miss{color:var(--left)}
+  @keyframes hitFade{0%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-50px) scale(1.4)}}
+
+  /* Particle burst on hit */
+  .particle-container{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:0;height:0;z-index:15;pointer-events:none}
+  .particle{position:absolute;width:4px;height:4px;border-radius:50%;animation:particleBurst .5s ease-out forwards}
+  @keyframes particleBurst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)}}
+
+  .voice-word{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,28px);font-weight:700;color:#fff;text-shadow:0 0 30px rgba(255,255,255,0.5);opacity:0;z-index:100;transition:opacity .1s;letter-spacing:4px}
+  .voice-word.show{opacity:1}
+  .voice-indicator{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:5px 16px;background:rgba(16,16,30,0.9);border:1px solid #1e1e35;border-radius:30px;z-index:100}
+  .mic-dot{width:8px;height:8px;border-radius:50%;background:#ff3a6e;animation:micPulse 1s infinite}
+  .mic-dot.listening{background:var(--up)}
+  @keyframes micPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .voice-indicator span{font-size:10px;color:#666;letter-spacing:1px}
+  .kb-hint{position:fixed;bottom:10px;right:14px;font-size:9px;color:#1e1e30;letter-spacing:1px;z-index:100}
+
+  .start-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;transition:opacity .6s}
+  .start-screen.hidden{opacity:0;pointer-events:none}
+  .start-screen h1{font-family:'Orbitron',monospace;font-size:clamp(32px,8vw,72px);font-weight:900;letter-spacing:6px;text-align:center;line-height:1.1;margin-bottom:8px;background:linear-gradient(90deg,var(--left),var(--down),var(--up),var(--right));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .start-screen .tagline{color:#555;font-size:clamp(12px,2vw,16px);letter-spacing:4px;text-transform:uppercase;margin-bottom:50px}
+  .start-btn{font-family:'Orbitron',monospace;font-size:clamp(14px,2vw,18px);font-weight:700;letter-spacing:4px;color:#fff;background:transparent;border:2px solid var(--up);padding:18px 56px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+  .start-btn:hover{background:var(--up);color:var(--bg);box-shadow:0 0 50px var(--glow-up)}
+  .start-instructions{margin-top:40px;color:#444;font-size:clamp(12px,1.5vw,15px);text-align:center;line-height:2.2;letter-spacing:1px}
+  .start-instructions strong{color:#888}
+
+  .game-over{position:fixed;inset:0;background:rgba(8,8,15,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .6s}
+  .game-over.show{opacity:1;pointer-events:all}
+  .game-over h2{font-family:'Orbitron',monospace;font-size:clamp(28px,5vw,48px);font-weight:900;letter-spacing:6px;color:var(--right);margin-bottom:30px}
+  .final-stats{text-align:center;margin-bottom:40px}
+  .final-stats div{font-family:'Orbitron',monospace;font-size:clamp(13px,2vw,18px);color:#555;margin:8px 0;letter-spacing:2px}
+  .final-stats .big{font-size:clamp(36px,7vw,56px);color:#fff;font-weight:900}
+  .grade{font-family:'Orbitron',monospace;font-size:clamp(60px,14vw,120px);font-weight:900;margin-bottom:10px;text-shadow:0 0 80px currentColor;animation:gradeIn .6s ease-out}
+  @keyframes gradeIn{0%{transform:scale(3);opacity:0}100%{transform:scale(1);opacity:1}}
+  .grade.s{color:var(--up)}.grade.a{color:var(--right)}.grade.b{color:var(--down)}.grade.c{color:var(--left)}
+</style>
+</head>
+<body>
+
+<div class="start-screen" id="startScreen">
+  <h1>GIVE EVAN AN A</h1>
+  <div class="tagline">Voice-controlled rhythm game</div>
+  <button class="start-btn" id="startBtn">START</button>
+  <div class="start-instructions">
+    Say <strong>"LEFT"</strong> &nbsp; <strong>"DOWN"</strong> &nbsp; <strong>"UP"</strong> &nbsp; <strong>"RIGHT"</strong> &nbsp; when arrows enter the zone<br>
+    Keyboard: <strong>← ↓ ↑ →</strong> or <strong>D F J K</strong>
+  </div>
+</div>
+
+<div class="game-over" id="gameOver">
+  <div class="grade" id="grade">A</div>
+  <h2>SONG COMPLETE</h2>
+  <div class="final-stats">
+    <div>SCORE</div>
+    <div class="big" id="finalScore">0</div>
+    <div style="margin-top:16px">
+      PERFECT <span id="finalPerfect" style="color:var(--up)">0</span> &nbsp;
+      GOOD <span id="finalGood" style="color:var(--down)">0</span> &nbsp;
+      MISS <span id="finalMiss" style="color:var(--left)">0</span>
+    </div>
+    <div>MAX COMBO <span id="finalCombo" style="color:var(--right)">0</span></div>
+  </div>
+  <button class="start-btn" id="restartBtn">PLAY AGAIN</button>
+</div>
+
+<div class="header"><h1>GIVE EVAN AN A</h1></div>
+<div class="hud">
+  <div class="hud-item"><div class="hud-label">SCORE</div><div class="hud-value" id="hud-score">0</div></div>
+  <div class="hud-item"><div class="hud-label">COMBO</div><div class="hud-value" id="hud-combo">0</div></div>
+  <div class="hud-item"><div class="hud-label">BEST</div><div class="hud-value" id="hud-streak">0</div></div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="game-wrap" id="gameWrap">
+  <div class="lane" data-dir="left"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">◀</span></div><div class="hit-text"></div><div class="lane-label">LEFT</div></div>
+  <div class="lane" data-dir="down"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▼</span></div><div class="hit-text"></div><div class="lane-label">DOWN</div></div>
+  <div class="lane" data-dir="up"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▲</span></div><div class="hit-text"></div><div class="lane-label">UP</div></div>
+  <div class="lane" data-dir="right"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▶</span></div><div class="hit-text"></div><div class="lane-label">RIGHT</div></div>
+</div>
+
+<div class="voice-word" id="voiceWord"></div>
+<div class="voice-indicator"><div class="mic-dot" id="micDot"></div><span id="micLabel">MIC OFF</span></div>
+<div class="kb-hint">← ↓ ↑ → / D F J K</div>
+
+<audio id="bgMusic" preload="auto"><source src="music.mp3" type="audio/mpeg"></audio>
+
+<script>
+const SONG_DURATION = 60000;
+const FADE_DURATION = 3000;
+const BPM = 120;
+const BEAT = 60000 / BPM;
+
+const state = {
+  running:false, score:0, combo:0, maxCombo:0,
+  perfect:0, good:0, miss:0, arrows:[], speed:3.0,
+  spawnIndex:0, songPattern:[], lastFrame:0, startTime:0, songLength:0,
+  fading:false,
+};
+const arrowChars = {left:'◀',down:'▼',up:'▲',right:'▶'};
+const lanes = {};
+const $ = id => document.getElementById(id);
+const music = $('bgMusic');
+document.querySelectorAll('.lane').forEach(l=>{lanes[l.dataset.dir]=l;});
+
+// ============ SONG GEN — 120BPM, 1 min ============
+function generateSong() {
+  const p = [];
+  let t = 2500;
+  const endTime = SONG_DURATION - 3000;
+  const patterns = [
+    ['left','right'],['up','down'],['down','up'],['right','left'],
+    ['left','down','right'],['right','up','left'],['up','down','up'],['down','left','down'],
+    ['left','right','left','right'],['up','down','up','down'],
+    ['left','down','up','right'],['right','up','down','left'],
+    ['left'],['down'],['up'],['right'],
+    ['down','down','up','up'],['left','left','right','right'],
+    ['up','right','down','left'],['right','down','left','up'],
+  ];
+  let pi = 0;
+  while (t < endTime) {
+    const seq = patterns[pi % patterns.length]; pi++;
+    for (const dir of seq) { if (t >= endTime) break; p.push({time:t,dir}); t += BEAT; }
+    t += BEAT * 1.5;
+  }
+  state.songPattern = p;
+  state.songLength = SONG_DURATION + FADE_DURATION + 2000;
+}
+
+function spawnArrow(dir) {
+  const el = document.createElement('div');
+  el.className = 'arrow'; el.textContent = arrowChars[dir];
+  lanes[dir].appendChild(el);
+  state.arrows.push({dir, el, y:-80, hit:false});
+}
+
+function getHitY() { return $('gameWrap').getBoundingClientRect().height - 110; }
+
+function update(ts) {
+  if (!state.running) return;
+  if (!state.lastFrame) state.lastFrame = ts;
+  const dt = Math.min(ts - state.lastFrame, 40);
+  state.lastFrame = ts;
+  const elapsed = ts - state.startTime;
+  const hitY = getHitY();
+  const slowZoneStart = hitY - 100; // arrows start slowing 100px above hit zone
+
+  // Progress
+  $('progressBar').style.width = Math.min(elapsed / (SONG_DURATION + FADE_DURATION), 1) * 100 + '%';
+
+  // Spawn
+  while (state.spawnIndex < state.songPattern.length) {
+    const n = state.songPattern[state.spawnIndex];
+    const travelTime = (hitY + 80) / state.speed * 16.67;
+    if (elapsed >= n.time - travelTime) { spawnArrow(n.dir); state.spawnIndex++; }
+    else break;
+  }
+
+  // Move arrows — slow down near hit zone + glow effect
+  const basePx = state.speed / 16.67;
+  for (let i = state.arrows.length - 1; i >= 0; i--) {
+    const a = state.arrows[i];
+    if (a.hit) continue;
+
+    // Slow down as arrow enters hit zone area
+    let speedMult = 1;
+    if (a.y > slowZoneStart) {
+      const progress = (a.y - slowZoneStart) / (hitY - slowZoneStart + 60);
+      speedMult = 1 - (progress * 0.35); // slows to 65% speed at bottom
+    }
+
+    a.y += basePx * dt * Math.max(speedMult, 0.5);
+    a.el.style.top = a.y + 'px';
+
+    // Glow intensifies near hit zone
+    if (a.y > slowZoneStart - 50) {
+      const glowIntensity = Math.min((a.y - slowZoneStart + 50) / 150, 1);
+      const glowSize = 10 + glowIntensity * 25;
+      a.el.style.textShadow = `0 0 ${glowSize}px currentColor`;
+      a.el.style.opacity = 0.7 + glowIntensity * 0.3;
+    }
+
+    // Miss — very generous, way past hit zone
+    if (a.y > hitY + 100) {
+      a.hit = true; a.el.style.opacity = '0.1';
+      a.el.style.transition = 'opacity .3s';
+      setTimeout(() => a.el.remove(), 400);
+      state.miss++; state.combo = 0;
+      showHitText(a.dir, 'miss'); updateHUD();
+    }
+  }
+
+  // Fade music
+  if (elapsed >= SONG_DURATION && !state.fading) { state.fading = true; fadeOutMusic(); }
+
+  // End
+  if (elapsed > state.songLength && state.arrows.every(a => a.hit)) { endGame(); return; }
+  requestAnimationFrame(update);
+}
+
+// ============ HIT — HUGE windows to mask voice delay ============
+function tryHit(dir) {
+  const hitY = getHitY();
+
+  // Search a massive window: from 120px above hit zone to 80px below
+  // This means voice delay of ~500ms is totally fine
+  let best = null, bestDist = Infinity;
+  for (const a of state.arrows) {
+    if (a.hit || a.dir !== dir) continue;
+    const dist = a.y - hitY; // positive = below hit zone, negative = above
+    const absDist = Math.abs(dist);
+
+    // Accept arrows from 130px above to 90px below the hit zone center
+    if (dist > -130 && dist < 90 && absDist < bestDist) {
+      bestDist = absDist; best = a;
+    }
+  }
+  if (!best) return;
+
+  // Everything in the zone = at least GOOD, close = PERFECT
+  if (bestDist <= 55) {
+    best.hit = true; best.el.remove(); state.perfect++; state.score += 300; state.combo++;
+  } else {
+    best.hit = true; best.el.remove(); state.good++; state.score += 100; state.combo++;
+  }
+  state.maxCombo = Math.max(state.maxCombo, state.combo);
+  showHitText(dir, bestDist <= 55 ? 'perfect' : 'good');
+  flashLane(dir);
+  spawnParticles(dir);
+  screenShake();
+  updateHUD();
+}
+
+function flashLane(dir) {
+  const g = lanes[dir].querySelector('.lane-glow');
+  const t = lanes[dir].querySelector('.target-arrow');
+  const f = lanes[dir].querySelector('.lane-flash');
+  g.style.opacity = '1'; t.classList.add('hit'); f.style.opacity = '1';
+  setTimeout(() => { g.style.opacity = '0'; t.classList.remove('hit'); f.style.opacity = '0'; }, 200);
+}
+
+function screenShake() {
+  const wrap = $('gameWrap');
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('shake');
+}
+
+function spawnParticles(dir) {
+  const lane = lanes[dir];
+  const container = document.createElement('div');
+  container.className = 'particle-container';
+  const color = getComputedStyle(document.documentElement).getPropertyValue(`--${dir}`).trim();
+
+  for (let i = 0; i < 8; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI * 2 / 8) * i + (Math.random() - 0.5) * 0.5;
+    const dist = 30 + Math.random() * 40;
+    p.style.setProperty('--px', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--py', Math.sin(angle) * dist + 'px');
+    p.style.background = color;
+    p.style.width = (3 + Math.random() * 3) + 'px';
+    p.style.height = p.style.width;
+    container.appendChild(p);
+  }
+  lane.appendChild(container);
+  setTimeout(() => container.remove(), 600);
+}
+
+function showHitText(dir, type) {
+  const h = lanes[dir].querySelector('.hit-text');
+  h.className = 'hit-text ' + type; h.textContent = type.toUpperCase();
+  h.style.animation = 'none'; void h.offsetWidth; h.style.animation = 'hitFade .6s forwards';
+}
+
+function updateHUD() {
+  $('hud-score').textContent = state.score;
+  $('hud-combo').textContent = state.combo;
+  $('hud-streak').textContent = state.maxCombo;
+}
+
+// ============ MUSIC ============
+function playMusic() { music.currentTime = 0; music.volume = 0.7; music.play().catch(e => console.log('Audio blocked:', e)); }
+function fadeOutMusic() {
+  const sv = music.volume, steps = 30, iv = FADE_DURATION / steps;
+  let s = 0;
+  const f = setInterval(() => { s++; music.volume = Math.max(0, sv * (1 - s / steps)); if (s >= steps) { clearInterval(f); music.pause(); } }, iv);
+}
+function stopMusic() { music.pause(); music.currentTime = 0; music.volume = 0.7; }
+
+// ============ VOICE ============
+let recognition = null, processedIdx = -1;
+function startVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $('micLabel').textContent = 'NO MIC API'; return; }
+  recognition = new SR(); recognition.continuous = true; recognition.interimResults = true;
+  recognition.lang = 'en-US'; recognition.maxAlternatives = 5;
+  recognition.onresult = e => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      for (let j = 0; j < e.results[i].length; j++) {
+        const w = e.results[i][j].transcript.trim().toLowerCase().split(/\s+/).pop();
+        const m = matchDir(w);
+        if (m) {
+          if (e.results[i].isFinal && i <= processedIdx) break;
+          if (e.results[i].isFinal) processedIdx = i;
+          showVoice(m.toUpperCase()); tryHit(m); return;
+        }
+      }
+    }
+  };
+  recognition.onstart = () => { $('micDot').classList.add('listening'); $('micLabel').textContent = 'LISTENING'; };
+  recognition.onerror = e => { if (e.error !== 'no-speech') console.log('Speech error:', e.error); };
+  recognition.onend = () => {
+    if (state.running) { try { recognition.start(); } catch(e) {} }
+    else { $('micDot').classList.remove('listening'); $('micLabel').textContent = 'MIC OFF'; }
+  };
+  processedIdx = -1; try { recognition.start(); } catch(e) {}
+}
+
+function matchDir(w) {
+  const m = {
+    left:'left',lift:'left',laughed:'left',loft:'left',let:'left',less:'left',led:'left',felt:'left',elf:'left',
+    down:'down',done:'down',dawn:'down',don:'down',town:'down',now:'down',gown:'down',drown:'down',ound:'down',
+    up:'up',app:'up',hop:'up',cup:'up',pup:'up',yup:'up',sup:'up',uhp:'up',
+    right:'right',write:'right',ride:'right',light:'right',white:'right',bright:'right',night:'right',might:'right',sight:'right',tight:'right',fight:'right',rite:'right',
+  };
+  return m[w] || null;
+}
+
+function showVoice(t) { const v=$('voiceWord');v.textContent=t;v.classList.add('show');setTimeout(()=>v.classList.remove('show'),400); }
+function stopVoice() { if(recognition){try{recognition.abort();}catch(e){}recognition=null;} $('micDot').classList.remove('listening');$('micLabel').textContent='MIC OFF'; }
+
+// ============ KEYBOARD ============
+document.addEventListener('keydown', e => {
+  if (!state.running) return;
+  const k = {ArrowLeft:'left',ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',d:'left',f:'down',j:'up',k:'right',D:'left',F:'down',J:'up',K:'right'};
+  const d = k[e.key]; if (d) { e.preventDefault(); tryHit(d); showVoice(d.toUpperCase()); }
+});
+
+// ============ GAME FLOW ============
+function startGame() {
+  Object.assign(state, {score:0,combo:0,maxCombo:0,perfect:0,good:0,miss:0,arrows:[],spawnIndex:0,lastFrame:0,fading:false});
+  document.querySelectorAll('.arrow').forEach(el => el.remove());
+  document.querySelectorAll('.particle-container').forEach(el => el.remove());
+  $('progressBar').style.width = '0%';
+  generateSong(); updateHUD();
+  $('startScreen').classList.add('hidden'); $('gameOver').classList.remove('show');
+  state.running = true; state.startTime = performance.now();
+  playMusic(); startVoice(); requestAnimationFrame(update);
+}
+
+function endGame() {
+  state.running = false; stopVoice(); stopMusic();
+  const tot = state.perfect + state.good + state.miss;
+  const pct = tot > 0 ? (state.perfect + state.good) / tot : 0;
+  const g = $('grade');
+  if (pct >= .95) { g.textContent = 'S'; g.className = 'grade s'; }
+  else if (pct >= .8) { g.textContent = 'A'; g.className = 'grade a'; }
+  else if (pct >= .6) { g.textContent = 'B'; g.className = 'grade b'; }
+  else { g.textContent = 'C'; g.className = 'grade c'; }
+  $('finalScore').textContent = state.score;
+  $('finalPerfect').textContent = state.perfect;
+  $('finalGood').textContent = state.good;
+  $('finalMiss').textContent = state.miss;
+  $('finalCombo').textContent = state.maxCombo;
+  setTimeout(() => $('gameOver').classList.add('show'), 600);
+}
+
+$('startBtn').addEventListener('click', startGame);
+$('restartBtn').addEventListener('click', startGame);
+</script>
+</body>
+</html>
