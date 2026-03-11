@@ -122,7 +122,7 @@
   <button class="start-btn" id="startBtn">START</button>
   <div class="start-instructions">
     Say <strong>"LEFT"</strong> &nbsp; <strong>"DOWN"</strong> &nbsp; <strong>"UP"</strong> &nbsp; <strong>"RIGHT"</strong> &nbsp; when arrows enter the zone<br>
-    Keyboard: <strong>← ↓ ↑ →</strong> or <strong>D F J K</strong>
+    Keyboard: <strong>&#x2190;&#xFE0E; &#x2193;&#xFE0E; &#x2191;&#xFE0E; &#x2192;&#xFE0E;</strong> or <strong>D F J K</strong>
   </div>
 </div>
 
@@ -151,15 +151,15 @@
 <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
 <div class="game-wrap" id="gameWrap">
-  <div class="lane" data-dir="left"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">◀</span></div><div class="hit-text"></div><div class="lane-label">LEFT</div></div>
-  <div class="lane" data-dir="down"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▼</span></div><div class="hit-text"></div><div class="lane-label">DOWN</div></div>
-  <div class="lane" data-dir="up"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▲</span></div><div class="hit-text"></div><div class="lane-label">UP</div></div>
-  <div class="lane" data-dir="right"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▶</span></div><div class="hit-text"></div><div class="lane-label">RIGHT</div></div>
+  <div class="lane" data-dir="left"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">◀&#xFE0E;</span></div><div class="hit-text"></div><div class="lane-label">LEFT</div></div>
+  <div class="lane" data-dir="down"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▼&#xFE0E;</span></div><div class="hit-text"></div><div class="lane-label">DOWN</div></div>
+  <div class="lane" data-dir="up"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▲&#xFE0E;</span></div><div class="hit-text"></div><div class="lane-label">UP</div></div>
+  <div class="lane" data-dir="right"><div class="lane-glow"></div><div class="lane-flash"></div><div class="hit-zone"><span class="target-arrow">▶&#xFE0E;</span></div><div class="hit-text"></div><div class="lane-label">RIGHT</div></div>
 </div>
 
 <div class="voice-word" id="voiceWord"></div>
 <div class="voice-indicator"><div class="mic-dot" id="micDot"></div><span id="micLabel">MIC OFF</span></div>
-<div class="kb-hint">← ↓ ↑ → / D F J K</div>
+<div class="kb-hint">&#x2190;&#xFE0E; &#x2193;&#xFE0E; &#x2191;&#xFE0E; &#x2192;&#xFE0E; / D F J K</div>
 
 <audio id="bgMusic" preload="auto"><source src="music.mp3" type="audio/mpeg"></audio>
 
@@ -175,7 +175,7 @@ const state = {
   spawnIndex:0, songPattern:[], lastFrame:0, startTime:0, songLength:0,
   fading:false,
 };
-const arrowChars = {left:'◀',down:'▼',up:'▲',right:'▶'};
+const arrowChars = {left:'◀\uFE0E',down:'▼\uFE0E',up:'▲\uFE0E',right:'▶\uFE0E'};
 const lanes = {};
 const $ = id => document.getElementById(id);
 const music = $('bgMusic');
