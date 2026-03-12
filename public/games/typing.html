@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Test - Evan's Playhouse</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .game-container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .typing-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .typing-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .typing-stat .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .typing-stat .value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--text-heading);
+    font-weight: 700;
+  }
+
+  .typing-text {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    font-size: 18px;
+    line-height: 2;
+    margin-bottom: 20px;
+    min-height: 120px;
+    letter-spacing: 0.3px;
+  }
+
+  .typing-text .correct { color: var(--accent); }
+  .typing-text .incorrect { color: #c97c7c; text-decoration: underline; }
+  .typing-text .current { border-left: 2px solid var(--accent); animation: blink 1s step-end infinite; }
+  .typing-text .pending { color: var(--text-muted); }
+
+  @keyframes blink { 50% { border-color: transparent; } }
+
+  .typing-input {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 16px;
+  }
+
+  .typing-input:focus { border-color: var(--accent); }
+  .typing-input::placeholder { color: var(--text-muted); }
+  .typing-input:disabled { opacity: 0.5; }
+
+  .result-msg {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+
+  .result-msg.show { display: block; }
+
+  .result-msg h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .result-msg p {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .timer-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .timer-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html" class="active">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Typing Test</h1>
+    <p>Test your typing speed. 30 seconds on the clock.</p>
+  </div>
+
+  <div class="game-container">
+    <div class="typing-stats">
+      <div class="typing-stat">
+        <div class="label">WPM</div>
+        <div class="value" id="wpm">0</div>
+      </div>
+      <div class="typing-stat">
+        <div class="label">Accuracy</div>
+        <div class="value" id="accuracy">100%</div>
+      </div>
+      <div class="typing-stat">
+        <div class="label">Time</div>
+        <div class="value" id="time">30</div>
+      </div>
+      <div class="typing-stat">
+        <div class="label">Best WPM</div>
+        <div class="value" id="bestWpm">--</div>
+      </div>
+    </div>
+
+    <div class="timer-bar"><div class="timer-bar-fill" id="timerBar"></div></div>
+
+    <div class="typing-text" id="textDisplay"></div>
+
+    <input type="text" class="typing-input" id="input" placeholder="Start typing here..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-primary" onclick="resetTest()">New Test</button>
+    </div>
+
+    <div class="result-msg mt-3" id="result">
+      <h3 id="resultTitle">Results</h3>
+      <p id="resultText"></p>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  const DURATION = 30;
+
+  const wordBank = [
+    'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
+    'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
+    'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
+    'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
+    'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well',
+    'way','even','new','want','because','any','these','give','day','most','us','great','between','need','large',
+    'under','never','each','right','hand','high','place','small','found','live','where','much','long','very','still',
+    'own','point','form','home','world','near','build','self','same','another','began','while','last','might','old',
+  ];
+
+  let text, pos, started, timer, startTime, correct, incorrect, totalTyped;
+
+  function generateText() {
+    const words = [];
+    for (let i = 0; i < 80; i++) {
+      words.push(wordBank[Math.floor(Math.random() * wordBank.length)]);
+    }
+    return words.join(' ');
+  }
+
+  function resetTest() {
+    text = generateText();
+    pos = 0;
+    started = false;
+    correct = 0;
+    incorrect = 0;
+    totalTyped = 0;
+    clearInterval(timer);
+    document.getElementById('input').value = '';
+    document.getElementById('input').disabled = false;
+    document.getElementById('input').focus();
+    document.getElementById('wpm').textContent = '0';
+    document.getElementById('accuracy').textContent = '100%';
+    document.getElementById('time').textContent = DURATION;
+    document.getElementById('timerBar').style.width = '100%';
+    document.getElementById('result').classList.remove('show');
+
+    const bestWpm = localStorage.getItem('ep_typing_best');
+    document.getElementById('bestWpm').textContent = bestWpm || '--';
+
+    renderText();
+  }
+
+  function renderText() {
+    const display = document.getElementById('textDisplay');
+    let html = '';
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i] === ' ' ? '&nbsp;' : escHtml(text[i]);
+      if (i < pos) {
+        const typed = document.getElementById('input').value;
+        // We track correctness in input handler
+        html += '<span class="correct">' + ch + '</span>';
+      } else if (i === pos) {
+        html += '<span class="current pending">' + ch + '</span>';
+      } else {
+        html += '<span class="pending">' + ch + '</span>';
+      }
+    }
+    display.innerHTML = html;
+  }
+
+  document.getElementById('input').addEventListener('input', function(e) {
+    if (!started) {
+      started = true;
+      startTime = Date.now();
+      timer = setInterval(tick, 100);
+    }
+
+    const val = this.value;
+    const expected = text.slice(0, pos + val.length);
+
+    // Check last character
+    if (val.length > 0) {
+      const lastIdx = val.length - 1;
+      const expectedChar = text[pos + lastIdx];
+      totalTyped++;
+      if (val[lastIdx] === expectedChar) {
+        correct++;
+      } else {
+        incorrect++;
+      }
+    }
+
+    // Check for space or completion of current segment
+    if (val.endsWith(' ') || pos + val.length >= text.length) {
+      // Move position forward
+      pos += val.length;
+      this.value = '';
+      renderText();
+    }
+
+    updateStats();
+  });
+
+  function tick() {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const remaining = Math.max(0, DURATION - elapsed);
+    document.getElementById('time').textContent = Math.ceil(remaining);
+    document.getElementById('timerBar').style.width = (remaining / DURATION * 100) + '%';
+
+    if (remaining <= 0) {
+      endTest();
+    }
+  }
+
+  function updateStats() {
+    const elapsed = (Date.now() - startTime) / 1000;
+    if (elapsed <= 0) return;
+    const words = correct / 5;
+    const wpm = Math.round(words / (elapsed / 60));
+    const acc = totalTyped > 0 ? Math.round(correct / totalTyped * 100) : 100;
+    document.getElementById('wpm').textContent = wpm;
+    document.getElementById('accuracy').textContent = acc + '%';
+  }
+
+  function endTest() {
+    clearInterval(timer);
+    document.getElementById('input').disabled = true;
+
+    const elapsed = DURATION;
+    const words = correct / 5;
+    const wpm = Math.round(words / (elapsed / 60));
+    const acc = totalTyped > 0 ? Math.round(correct / totalTyped * 100) : 100;
+
+    document.getElementById('wpm').textContent = wpm;
+    document.getElementById('accuracy').textContent = acc + '%';
+
+    // Save best
+    const prev = parseInt(localStorage.getItem('ep_typing_best') || '0');
+    if (wpm > prev) {
+      localStorage.setItem('ep_typing_best', wpm);
+      document.getElementById('bestWpm').textContent = wpm;
+    }
+
+    document.getElementById('resultTitle').textContent = wpm + ' WPM';
+    document.getElementById('resultText').textContent = 'Accuracy: ' + acc + '% -- ' + correct + ' correct characters, ' + incorrect + ' mistakes.';
+    document.getElementById('result').classList.add('show');
+
+    // Log activity
+    const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
+    log.push({ text: 'Typing Test - ' + wpm + ' WPM (' + acc + '% accuracy)', time: new Date().toISOString() });
+    if (log.length > 50) log.splice(0, log.length - 50);
+    localStorage.setItem('ep_activity', JSON.stringify(log));
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  resetTest();
+</script>
+
+</body>
+</html>
