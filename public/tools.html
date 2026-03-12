@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools - Evan's Playhouse</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Todo List */
+  .todo-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .todo-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .todo-input-row input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .todo-input-row input:focus {
+    border-color: var(--accent);
+  }
+
+  .todo-input-row input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .todo-list {
+    list-style: none;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .todo-item:last-child { border-bottom: none; }
+
+  .todo-item.done span {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .todo-item input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .todo-item span {
+    flex: 1;
+  }
+
+  .todo-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all var(--transition);
+  }
+
+  .todo-delete:hover {
+    color: #c97c7c;
+    background: rgba(201, 124, 124, 0.1);
+  }
+
+  /* Pomodoro Timer */
+  .timer-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .timer-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(56px, 10vw, 80px);
+    color: var(--text-heading);
+    margin-bottom: 8px;
+    letter-spacing: 4px;
+  }
+
+  .timer-label {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  .timer-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .timer-presets {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .timer-preset {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all var(--transition);
+  }
+
+  .timer-preset:hover, .timer-preset.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Calculator */
+  .calc-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 320px;
+    margin-bottom: 24px;
+  }
+
+  .calc-display {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: right;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--text-heading);
+    margin-bottom: 16px;
+    min-height: 60px;
+    word-break: break-all;
+    overflow: hidden;
+  }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .calc-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .calc-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+  }
+
+  .calc-btn.op {
+    color: var(--accent);
+  }
+
+  .calc-btn.eq {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .calc-btn.eq:hover {
+    background: var(--accent-hover);
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  .tool-section h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html" class="active">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Tools</h1>
+    <p>Handy stuff. All saved locally in your browser.</p>
+  </div>
+
+  <div class="tools-grid">
+    <!-- Pomodoro Timer -->
+    <div class="tool-section">
+      <h3>Pomodoro Timer</h3>
+      <div class="timer-container">
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-label" id="timerLabel">Focus Time</div>
+        <div class="timer-buttons">
+          <button class="btn btn-primary" id="timerStart" onclick="toggleTimer()">Start</button>
+          <button class="btn btn-secondary" onclick="resetTimer()">Reset</button>
+        </div>
+        <div class="timer-presets">
+          <button class="timer-preset active" onclick="setPreset(25, this)">25 min</button>
+          <button class="timer-preset" onclick="setPreset(15, this)">15 min</button>
+          <button class="timer-preset" onclick="setPreset(5, this)">5 min</button>
+          <button class="timer-preset" onclick="setPreset(1, this)">1 min</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculator -->
+    <div class="tool-section">
+      <h3>Calculator</h3>
+      <div class="calc-container">
+        <div class="calc-display" id="calcDisplay">0</div>
+        <div class="calc-grid">
+          <button class="calc-btn op" onclick="calcClear()">C</button>
+          <button class="calc-btn op" onclick="calcBackspace()">&#8592;</button>
+          <button class="calc-btn op" onclick="calcOp('%')">%</button>
+          <button class="calc-btn op" onclick="calcOp('/')">/</button>
+          <button class="calc-btn" onclick="calcNum('7')">7</button>
+          <button class="calc-btn" onclick="calcNum('8')">8</button>
+          <button class="calc-btn" onclick="calcNum('9')">9</button>
+          <button class="calc-btn op" onclick="calcOp('*')">x</button>
+          <button class="calc-btn" onclick="calcNum('4')">4</button>
+          <button class="calc-btn" onclick="calcNum('5')">5</button>
+          <button class="calc-btn" onclick="calcNum('6')">6</button>
+          <button class="calc-btn op" onclick="calcOp('-')">-</button>
+          <button class="calc-btn" onclick="calcNum('1')">1</button>
+          <button class="calc-btn" onclick="calcNum('2')">2</button>
+          <button class="calc-btn" onclick="calcNum('3')">3</button>
+          <button class="calc-btn op" onclick="calcOp('+')">+</button>
+          <button class="calc-btn" onclick="calcNum('0')" style="grid-column: span 2">0</button>
+          <button class="calc-btn" onclick="calcNum('.')">.</button>
+          <button class="calc-btn eq" onclick="calcEquals()">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Todo List -->
+    <div class="tool-section" style="grid-column: 1 / -1;">
+      <h3>To-Do List</h3>
+      <div class="todo-container">
+        <div class="todo-input-row">
+          <input type="text" id="todoInput" placeholder="Add something to do..." onkeydown="if(event.key==='Enter')addTodo()">
+          <button class="btn btn-primary" onclick="addTodo()">Add</button>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  // =========== POMODORO ===========
+  let timerSeconds = 25 * 60;
+  let timerInterval = null;
+  let timerRunning = false;
+  let timerPreset = 25;
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timerStart').textContent = 'Start';
+    } else {
+      timerRunning = true;
+      document.getElementById('timerStart').textContent = 'Pause';
+      timerInterval = setInterval(() => {
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          document.getElementById('timerStart').textContent = 'Start';
+          document.getElementById('timerLabel').textContent = 'Time is up!';
+          logActivity('Completed a ' + timerPreset + ' min timer');
+          return;
+        }
+        timerSeconds--;
+        updateTimerDisplay();
+      }, 1000);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerSeconds = timerPreset * 60;
+    updateTimerDisplay();
+    document.getElementById('timerStart').textContent = 'Start';
+    document.getElementById('timerLabel').textContent = 'Focus Time';
+  }
+
+  function setPreset(mins, el) {
+    timerPreset = mins;
+    document.querySelectorAll('.timer-preset').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    resetTimer();
+  }
+
+  // =========== CALCULATOR ===========
+  let calcExpr = '';
+  let calcNew = true;
+
+  function calcNum(n) {
+    if (calcNew) { calcExpr = ''; calcNew = false; }
+    calcExpr += n;
+    document.getElementById('calcDisplay').textContent = calcExpr;
+  }
+
+  function calcOp(op) {
+    calcNew = false;
+    calcExpr += ' ' + op + ' ';
+    document.getElementById('calcDisplay').textContent = calcExpr;
+  }
+
+  function calcEquals() {
+    try {
+      const result = Function('"use strict"; return (' + calcExpr + ')')();
+      document.getElementById('calcDisplay').textContent = result;
+      calcExpr = String(result);
+      calcNew = true;
+    } catch(e) {
+      document.getElementById('calcDisplay').textContent = 'Error';
+      calcExpr = '';
+      calcNew = true;
+    }
+  }
+
+  function calcClear() {
+    calcExpr = '';
+    calcNew = true;
+    document.getElementById('calcDisplay').textContent = '0';
+  }
+
+  function calcBackspace() {
+    calcExpr = calcExpr.trimEnd().slice(0, -1).trimEnd();
+    document.getElementById('calcDisplay').textContent = calcExpr || '0';
+  }
+
+  // =========== TODO LIST ===========
+  let todos = JSON.parse(localStorage.getItem('ep_todos') || '[]');
+
+  function renderTodos() {
+    const list = document.getElementById('todoList');
+    list.innerHTML = '';
+    if (todos.length === 0) {
+      list.innerHTML = '<li class="todo-item"><span style="color:var(--text-muted)">Nothing yet. Add something above.</span></li>';
+      return;
+    }
+    todos.forEach((t, i) => {
+      const li = document.createElement('li');
+      li.className = 'todo-item' + (t.done ? ' done' : '');
+      li.innerHTML = '<input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggleTodo(' + i + ')">'
+        + '<span>' + escHtml(t.text) + '</span>'
+        + '<button class="todo-delete" onclick="deleteTodo(' + i + ')">x</button>';
+      list.appendChild(li);
+    });
+  }
+
+  function addTodo() {
+    const input = document.getElementById('todoInput');
+    const text = input.value.trim();
+    if (!text) return;
+    todos.push({ text, done: false });
+    saveTodos();
+    renderTodos();
+    input.value = '';
+  }
+
+  function toggleTodo(i) {
+    todos[i].done = !todos[i].done;
+    saveTodos();
+    renderTodos();
+  }
+
+  function deleteTodo(i) {
+    todos.splice(i, 1);
+    saveTodos();
+    renderTodos();
+  }
+
+  function saveTodos() {
+    localStorage.setItem('ep_todos', JSON.stringify(todos));
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  renderTodos();
+
+  // =========== ACTIVITY LOG ===========
+  function logActivity(text) {
+    const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
+    log.push({ text, time: new Date().toISOString() });
+    if (log.length > 50) log.splice(0, log.length - 50);
+    localStorage.setItem('ep_activity', JSON.stringify(log));
+  }
+</script>
+
+</body>
+</html>

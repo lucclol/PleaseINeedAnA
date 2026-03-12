@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Evan's Playhouse</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .activity-list {
+    list-style: none;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .activity-time {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .clock-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 8vw, 72px);
+    color: var(--text-heading);
+    text-align: center;
+    margin-bottom: 4px;
+    font-weight: 400;
+    letter-spacing: 2px;
+  }
+
+  .clock-date {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="/games.html">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="clock-display" id="clock">--:--:--</div>
+  <div class="clock-date" id="clockDate"></div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Visits</div>
+      <div class="stat-value" id="totalVisits">0</div>
+      <div class="stat-sub">since you first came here</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Rhythm Game Best</div>
+      <div class="stat-value" id="rhythmBest">--</div>
+      <div class="stat-sub">highest score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Snake Best</div>
+      <div class="stat-value" id="snakeBest">--</div>
+      <div class="stat-sub">highest score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Typing Speed</div>
+      <div class="stat-value" id="typingBest">--</div>
+      <div class="stat-sub">best WPM</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="quick-actions">
+      <a href="/games.html" class="btn btn-primary">Play Games</a>
+      <a href="/tools.html" class="btn btn-secondary">Open Tools</a>
+      <a href="/guestbook.html" class="btn btn-secondary">Guestbook</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Recent Activity</h2>
+    <ul class="activity-list" id="activityList">
+      <li class="activity-item">
+        <span class="activity-dot"></span>
+        <span>No activity yet. Go play a game!</span>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    document.getElementById('clock').textContent = h12 + ':' + m + ':' + s + ' ' + ampm;
+
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('clockDate').textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Visit counter
+  let visits = parseInt(localStorage.getItem('ep_visits') || '0') + 1;
+  localStorage.setItem('ep_visits', visits);
+  document.getElementById('totalVisits').textContent = visits;
+
+  // High scores
+  const rhythmBest = localStorage.getItem('ep_rhythm_best');
+  const snakeBest = localStorage.getItem('ep_snake_best');
+  const typingBest = localStorage.getItem('ep_typing_best');
+  if (rhythmBest) document.getElementById('rhythmBest').textContent = rhythmBest;
+  if (snakeBest) document.getElementById('snakeBest').textContent = snakeBest;
+  if (typingBest) document.getElementById('typingBest').textContent = typingBest + ' WPM';
+
+  // Activity log
+  function loadActivity() {
+    const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
+    const list = document.getElementById('activityList');
+    if (log.length === 0) return;
+    list.innerHTML = '';
+    log.slice(-10).reverse().forEach(entry => {
+      const li = document.createElement('li');
+      li.className = 'activity-item';
+      const ago = timeAgo(new Date(entry.time));
+      li.innerHTML = '<span class="activity-dot"></span><span>' + entry.text + '</span><span class="activity-time">' + ago + '</span>';
+      list.appendChild(li);
+    });
+  }
+
+  function timeAgo(date) {
+    const diff = Date.now() - date.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  loadActivity();
+</script>
+
+</body>
+</html>

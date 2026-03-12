@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic-Tac-Toe - Evan's Playhouse</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .mode-select {
+    display: flex;
+    gap: 10px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 300px;
+    height: 300px;
+  }
+
+  .cell {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    color: var(--text-heading);
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+  }
+
+  .cell:hover:not(.taken) {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+  }
+
+  .cell.taken { cursor: default; }
+  .cell.x { color: var(--accent); }
+  .cell.o { color: var(--text-muted); }
+  .cell.win { background: var(--accent-dim); border-color: var(--accent); }
+
+  .status {
+    font-size: 16px;
+    color: var(--text-heading);
+    min-height: 24px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .scores-row {
+    display: flex;
+    gap: 32px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .scores-row strong {
+    color: var(--text-heading);
+    margin-left: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html" class="active">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Tic-Tac-Toe</h1>
+    <p>Play against a friend or the computer.</p>
+  </div>
+
+  <div class="game-container">
+    <div class="mode-select">
+      <button class="btn btn-primary" id="btnVsAI" onclick="setMode('ai')">vs Computer</button>
+      <button class="btn btn-secondary" id="btnVs2P" onclick="setMode('2p')">2 Player</button>
+    </div>
+
+    <div class="status" id="status">X's turn</div>
+
+    <div class="board" id="board"></div>
+
+    <div class="scores-row">
+      <span>X Wins<strong id="xWins">0</strong></span>
+      <span>O Wins<strong id="oWins">0</strong></span>
+      <span>Draws<strong id="draws">0</strong></span>
+    </div>
+
+    <button class="btn btn-secondary" onclick="resetGame()">New Game</button>
+  </div>
+</main>
+
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  let board, turn, over, mode, scores;
+
+  function init() {
+    scores = { x: 0, o: 0, d: 0 };
+    mode = 'ai';
+    resetGame();
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btnVsAI').className = 'btn ' + (m === 'ai' ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('btnVs2P').className = 'btn ' + (m === '2p' ? 'btn-primary' : 'btn-secondary');
+    scores = { x: 0, o: 0, d: 0 };
+    updateScores();
+    resetGame();
+  }
+
+  function resetGame() {
+    board = Array(9).fill('');
+    turn = 'X';
+    over = false;
+    document.getElementById('status').textContent = "X's turn";
+    render();
+  }
+
+  function render() {
+    const el = document.getElementById('board');
+    el.innerHTML = '';
+    board.forEach((v, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (v ? ' taken ' + v.toLowerCase() : '');
+      cell.textContent = v;
+      cell.addEventListener('click', () => play(i));
+      el.appendChild(cell);
+    });
+  }
+
+  function play(i) {
+    if (over || board[i]) return;
+    if (mode === 'ai' && turn === 'O') return;
+
+    board[i] = turn;
+    render();
+
+    const win = checkWin(turn);
+    if (win) {
+      endRound(turn, win);
+      return;
+    }
+    if (board.every(c => c)) {
+      endRound('draw');
+      return;
+    }
+
+    turn = turn === 'X' ? 'O' : 'X';
+    document.getElementById('status').textContent = turn + "'s turn";
+
+    if (mode === 'ai' && turn === 'O') {
+      setTimeout(aiMove, 300);
+    }
+  }
+
+  function aiMove() {
+    if (over) return;
+    // Try to win
+    let move = findWinMove('O');
+    // Block player
+    if (move === -1) move = findWinMove('X');
+    // Center
+    if (move === -1 && !board[4]) move = 4;
+    // Random corner
+    if (move === -1) {
+      const corners = [0,2,6,8].filter(i => !board[i]);
+      if (corners.length) move = corners[Math.floor(Math.random() * corners.length)];
+    }
+    // Any
+    if (move === -1) move = board.findIndex(c => !c);
+
+    play(move);
+  }
+
+  function findWinMove(player) {
+    const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for (const [a,b,c] of lines) {
+      const vals = [board[a], board[b], board[c]];
+      if (vals.filter(v => v === player).length === 2 && vals.includes('')) {
+        return [a,b,c][vals.indexOf('')];
+      }
+    }
+    return -1;
+  }
+
+  function checkWin(player) {
+    const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for (const line of lines) {
+      if (line.every(i => board[i] === player)) return line;
+    }
+    return null;
+  }
+
+  function endRound(result, winLine) {
+    over = true;
+    if (result === 'draw') {
+      scores.d++;
+      document.getElementById('status').textContent = "It's a draw";
+    } else {
+      scores[result.toLowerCase()]++;
+      document.getElementById('status').textContent = result + ' wins!';
+      // Highlight winning cells
+      if (winLine) {
+        const cells = document.getElementById('board').children;
+        winLine.forEach(i => cells[i].classList.add('win'));
+      }
+    }
+    updateScores();
+  }
+
+  function updateScores() {
+    document.getElementById('xWins').textContent = scores.x;
+    document.getElementById('oWins').textContent = scores.o;
+    document.getElementById('draws').textContent = scores.d;
+  }
+
+  init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake - Evan's Playhouse</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  canvas {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    max-width: 100%;
+  }
+
+  .game-info {
+    display: flex;
+    gap: 32px;
+    font-size: 14px;
+  }
+
+  .game-info span {
+    color: var(--text-muted);
+  }
+
+  .game-info strong {
+    color: var(--text-heading);
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin-left: 6px;
+  }
+
+  .game-over-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 22, 18, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .game-over-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .game-over-overlay h2 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .game-over-overlay p {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+
+  .controls-hint {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  /* Mobile controls */
+  .mobile-controls {
+    display: none;
+    gap: 8px;
+  }
+
+  .mobile-controls button {
+    width: 56px;
+    height: 56px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-controls button:active {
+    background: var(--bg-card-hover);
+  }
+
+  @media (max-width: 600px) {
+    .mobile-controls { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px); justify-content: center; }
+    .m-up { grid-column: 2; }
+    .m-left { grid-column: 1; grid-row: 2; }
+    .m-down { grid-column: 2; grid-row: 2; }
+    .m-right { grid-column: 3; grid-row: 2; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html" class="active">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Snake</h1>
+    <p>Classic snake. Use arrow keys or WASD.</p>
+  </div>
+
+  <div class="game-container">
+    <div class="game-info">
+      <span>Score <strong id="score">0</strong></span>
+      <span>Best <strong id="best">0</strong></span>
+    </div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="controls-hint">Arrow keys or WASD to move. Press any key to start.</div>
+    <div class="mobile-controls">
+      <button class="m-up" onclick="setDir(0,-1)">W</button>
+      <button class="m-left" onclick="setDir(-1,0)">A</button>
+      <button class="m-down" onclick="setDir(0,1)">S</button>
+      <button class="m-right" onclick="setDir(1,0)">D</button>
+    </div>
+  </div>
+
+  <div class="game-over-overlay" id="gameOver">
+    <h2>Game Over</h2>
+    <p id="goText">Score: 0</p>
+    <button class="btn btn-primary" onclick="resetGame()">Play Again</button>
+  </div>
+</main>
+
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const CELL = 20;
+  const COLS = canvas.width / CELL;
+  const ROWS = canvas.height / CELL;
+
+  let snake, dir, nextDir, food, score, gameLoop, started, gameOverShown;
+  const best = () => parseInt(localStorage.getItem('ep_snake_best') || '0');
+
+  function init() {
+    snake = [{x: 10, y: 10}];
+    dir = {x: 1, y: 0};
+    nextDir = {x: 1, y: 0};
+    score = 0;
+    started = false;
+    gameOverShown = false;
+    placeFood();
+    document.getElementById('score').textContent = '0';
+    document.getElementById('best').textContent = best();
+    document.getElementById('gameOver').classList.remove('show');
+    draw();
+  }
+
+  function placeFood() {
+    do {
+      food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+    } while (snake.some(s => s.x === food.x && s.y === food.y));
+  }
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#231f1b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines
+    ctx.strokeStyle = '#2e2924';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= COLS; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * CELL, 0);
+      ctx.lineTo(x * CELL, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= ROWS; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * CELL);
+      ctx.lineTo(canvas.width, y * CELL);
+      ctx.stroke();
+    }
+
+    // Food
+    ctx.fillStyle = '#c9a87c';
+    ctx.beginPath();
+    ctx.arc(food.x * CELL + CELL/2, food.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snake
+    snake.forEach((s, i) => {
+      const alpha = 1 - (i / snake.length) * 0.4;
+      ctx.fillStyle = i === 0 ? '#e8e0d6' : 'rgba(201, 168, 124, ' + alpha + ')';
+      ctx.fillRect(s.x * CELL + 1, s.y * CELL + 1, CELL - 2, CELL - 2);
+      ctx.strokeStyle = '#1a1612';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(s.x * CELL + 1, s.y * CELL + 1, CELL - 2, CELL - 2);
+    });
+  }
+
+  function step() {
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+    // Collision check
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS || snake.some(s => s.x === head.x && s.y === head.y)) {
+      gameOver();
+      return;
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      document.getElementById('score').textContent = score;
+      placeFood();
+    } else {
+      snake.pop();
+    }
+
+    draw();
+  }
+
+  function gameOver() {
+    clearInterval(gameLoop);
+    started = false;
+    gameOverShown = true;
+
+    const b = best();
+    if (score > b) localStorage.setItem('ep_snake_best', score);
+    document.getElementById('best').textContent = Math.max(score, b);
+    document.getElementById('goText').textContent = 'Score: ' + score;
+    document.getElementById('gameOver').classList.add('show');
+
+    // Log activity
+    const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
+    log.push({ text: 'Played Snake - Score: ' + score, time: new Date().toISOString() });
+    if (log.length > 50) log.splice(0, log.length - 50);
+    localStorage.setItem('ep_activity', JSON.stringify(log));
+  }
+
+  function resetGame() {
+    init();
+  }
+
+  function setDir(x, y) {
+    if (!started) {
+      started = true;
+      gameLoop = setInterval(step, 120);
+    }
+    // Prevent reversing
+    if (dir.x === -x && dir.y === -y) return;
+    nextDir = {x, y};
+  }
+
+  document.addEventListener('keydown', e => {
+    if (gameOverShown) { resetGame(); return; }
+    const map = {
+      ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0],
+      w: [0,-1], s: [0,1], a: [-1,0], d: [1,0],
+      W: [0,-1], S: [0,1], A: [-1,0], D: [1,0],
+    };
+    const d = map[e.key];
+    if (d) {
+      e.preventDefault();
+      setDir(d[0], d[1]);
+    }
+  });
+
+  init();
+</script>
+
+</body>
+</html>

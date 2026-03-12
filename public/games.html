@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Games - Evan's Playhouse</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .game-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .game-card .card-preview {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html" class="active">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Games</h1>
+    <p>Pick something and play. Scores are saved locally.</p>
+  </div>
+
+  <div class="card-grid">
+    <a href="/games/rhythm.html" class="card game-card">
+      <div class="card-icon">/\/\</div>
+      <h3>Rhythm Game</h3>
+      <p>Voice-controlled rhythm game. Hit arrows to the beat with your voice or keyboard.</p>
+      <div class="card-preview">60 second song -- arrow keys or voice</div>
+      <span class="card-tag">Music</span>
+    </a>
+
+    <a href="/games/snake.html" class="card game-card">
+      <div class="card-icon">~&gt;</div>
+      <h3>Snake</h3>
+      <p>Classic snake. Eat, grow, don't crash. Simple as that.</p>
+      <div class="card-preview">Arrow keys to move</div>
+      <span class="card-tag">Classic</span>
+    </a>
+
+    <a href="/games/tictactoe.html" class="card game-card">
+      <div class="card-icon">X|O</div>
+      <h3>Tic-Tac-Toe</h3>
+      <p>Play against a friend or challenge the computer.</p>
+      <div class="card-preview">2 player or vs AI</div>
+      <span class="card-tag">Strategy</span>
+    </a>
+
+    <a href="/games/memory.html" class="card game-card">
+      <div class="card-icon">[?]</div>
+      <h3>Memory Match</h3>
+      <p>Flip cards and find matching pairs. Test your memory.</p>
+      <div class="card-preview">Match all pairs to win</div>
+      <span class="card-tag">Puzzle</span>
+    </a>
+
+    <a href="/games/typing.html" class="card game-card">
+      <div class="card-icon">_|</div>
+      <h3>Typing Test</h3>
+      <p>How fast can you type? Find out your WPM.</p>
+      <div class="card-preview">30 second test</div>
+      <span class="card-tag">Speed</span>
+    </a>
+  </div>
+</main>
+
+<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+
+<footer class="footer">Evan's Playhouse</footer>
+
+</body>
+</html>
