@@ -5,20 +5,20 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #1a1612;
-  --bg-card: #231f1b;
-  --bg-card-hover: #2c2622;
-  --bg-surface: #1e1a16;
-  --bg-nav: rgba(26, 22, 18, 0.95);
-  --text: #d4cdc4;
-  --text-muted: #8a8278;
-  --text-heading: #e8e0d6;
-  --accent: #c9a87c;
-  --accent-hover: #d4b88e;
-  --accent-dim: rgba(201, 168, 124, 0.15);
-  --border: #2e2924;
-  --border-light: #3a342e;
-  --shadow: rgba(0, 0, 0, 0.3);
+  --bg: #f4f1ee;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafa;
+  --bg-surface: #eae7e3;
+  --bg-nav: rgba(244, 241, 238, 0.95);
+  --text: #4a4540;
+  --text-muted: #9a9490;
+  --text-heading: #2a2520;
+  --accent: #7c8db5;
+  --accent-hover: #6a7da8;
+  --accent-dim: rgba(124, 141, 181, 0.12);
+  --border: #ddd8d3;
+  --border-light: #ccc7c2;
+  --shadow: rgba(0, 0, 0, 0.08);
   --radius: 12px;
   --radius-sm: 8px;
   --transition: 0.25s ease;
@@ -293,7 +293,7 @@ a:hover {
 .btn-primary:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(201, 168, 124, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 141, 181, 0.3);
 }
 
 .btn-secondary {
