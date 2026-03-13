@@ -398,7 +398,7 @@
     if (useAPI) {
       try {
         const body = { id, authorToken: getAuthorToken() };
-        if (isOwner) body.password = 'evan';
+        if (isOwner) body.password = 'paulina';
         const res = await fetch('/api/guestbook', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -419,7 +419,7 @@
 
   async function clearGuestbook() {
     const pw = prompt('Enter the owner password to clear all entries:');
-    if (pw === 'evan') {
+    if (pw === 'paulina') {
       isOwner = true;
       if (useAPI) {
         try {
@@ -440,7 +440,7 @@
 
   function loginAsOwner() {
     const pw = prompt('Enter owner password:');
-    if (pw === 'evan') {
+    if (pw === 'paulina') {
       isOwner = true;
       renderEntries();
     } else if (pw !== null) {
