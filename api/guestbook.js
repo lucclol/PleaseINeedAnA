@@ -1,5 +1,14 @@
 let kv;
-try { kv = require('@vercel/kv').kv; } catch (e) { kv = null; }
+try {
+  const mod = require('@vercel/kv');
+  // Check both standard and ec_ prefixed env vars
+  if (process.env.KV_REST_API_URL || process.env.ec_KV_REST_API_URL) {
+    kv = mod.createClient({
+      url: process.env.KV_REST_API_URL || process.env.ec_KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN || process.env.ec_KV_REST_API_TOKEN
+    });
+  }
+} catch (e) { kv = null; }
 
 // In-memory fallback when KV is not configured
 // Persists across requests within the same serverless instance
