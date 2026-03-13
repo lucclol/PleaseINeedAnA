@@ -46,8 +46,8 @@ module.exports = async function handler(req, res) {
         time: new Date().toISOString(),
         authorToken: authorToken || null
       };
-      if (img && img.length < 200000) entry.img = img;
-      if (audio && audio.length < 200000) entry.audio = audio;
+      if (img && img.length < 1500000) entry.img = img;
+      if (audio && audio.length < 3000000) entry.audio = audio;
       entries.push(entry);
       if (entries.length > 200) entries.splice(0, entries.length - 200);
       await saveEntries(entries);
