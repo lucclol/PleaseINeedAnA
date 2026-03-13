@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
+<title>Media Tools - Evan's Playhouse</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body {
+    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  .tool-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tool-tab {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+  }
+
+  .tool-tab:hover, .tool-tab.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .tool-panel {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+
+  .tool-panel.active { display: block; }
+
+  .tool-panel h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .tool-panel .desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 20px;
+    background: var(--bg-surface);
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .drop-zone input[type="file"] { display: none; }
+
+  .preview-area {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .preview-area img, .preview-area video, .preview-area canvas {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .output-area {
+    margin-top: 20px;
+  }
+
+  .output-area textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    color: var(--text);
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+    word-break: break-all;
+  }
+
+  .output-area textarea:focus { border-color: var(--accent); }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .slider-row label {
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 80px;
+  }
+
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .slider-row .val {
+    font-size: 13px;
+    color: var(--text);
+    min-width: 50px;
+    text-align: right;
+  }
+
+  .crop-container {
+    position: relative;
+    display: inline-block;
+    cursor: crosshair;
+  }
+
+  .crop-overlay {
+    position: absolute;
+    border: 2px dashed var(--accent);
+    background: rgba(124, 141, 181, 0.15);
+    pointer-events: none;
+  }
+
+  .range-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .range-controls label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .range-controls input[type="number"] {
+    width: 80px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .range-controls input[type="number"]:focus { border-color: var(--accent); }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/media-tools.html" class="active">Media Tools</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Media Tools</h1>
+    <p>Image, video, and audio tools. Everything runs in your browser.</p>
+  </div>
+
+  <div class="tool-tabs">
+    <button class="tool-tab active" onclick="switchTab('dataurl', this)">Image to Data URL</button>
+    <button class="tool-tab" onclick="switchTab('transparent', this)">Transparent BG</button>
+    <button class="tool-tab" onclick="switchTab('crop', this)">Image Cropper</button>
+    <button class="tool-tab" onclick="switchTab('video', this)">Video Trimmer</button>
+    <button class="tool-tab" onclick="switchTab('audio', this)">MP3 Trimmer</button>
+  </div>
+
+  <!-- Image to Data URL -->
+  <div class="tool-panel active" id="panel-dataurl">
+    <h2>Image to Data URL</h2>
+    <p class="desc">Convert any image to a base64 data URL string.</p>
+    <div class="drop-zone" id="dz-dataurl" onclick="document.getElementById('file-dataurl').click()">
+      Drop an image here or click to browse
+      <input type="file" id="file-dataurl" accept="image/*" onchange="handleDataUrl(this)">
+    </div>
+    <div class="preview-area" id="preview-dataurl"></div>
+    <div class="output-area" id="output-dataurl" style="display:none">
+      <textarea id="dataurl-result" readonly></textarea>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="copyText('dataurl-result')">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transparent BG -->
+  <div class="tool-panel" id="panel-transparent">
+    <h2>Transparent Background</h2>
+    <p class="desc">Remove a solid background color from an image. Works best with uniform backgrounds.</p>
+    <div class="drop-zone" id="dz-transparent" onclick="document.getElementById('file-transparent').click()">
+      Drop an image here or click to browse
+      <input type="file" id="file-transparent" accept="image/*" onchange="handleTransparent(this)">
+    </div>
+    <div class="slider-row" id="tolerance-row" style="display:none">
+      <label>Tolerance</label>
+      <input type="range" id="tolerance" min="0" max="100" value="30" oninput="updateTransparent()">
+      <span class="val" id="tolerance-val">30</span>
+    </div>
+    <div class="preview-area" id="preview-transparent"></div>
+    <div class="actions" id="actions-transparent" style="display:none">
+      <button class="btn btn-primary" onclick="downloadTransparent()">Download PNG</button>
+    </div>
+  </div>
+
+  <!-- Image Cropper -->
+  <div class="tool-panel" id="panel-crop">
+    <h2>Image Cropper</h2>
+    <p class="desc">Click and drag on the image to select a crop area.</p>
+    <div class="drop-zone" id="dz-crop" onclick="document.getElementById('file-crop').click()">
+      Drop an image here or click to browse
+      <input type="file" id="file-crop" accept="image/*" onchange="handleCrop(this)">
+    </div>
+    <div class="preview-area" id="preview-crop"></div>
+    <div class="actions" id="actions-crop" style="display:none">
+      <button class="btn btn-primary" onclick="downloadCrop()">Download Cropped</button>
+    </div>
+  </div>
+
+  <!-- Video Trimmer -->
+  <div class="tool-panel" id="panel-video">
+    <h2>Video Trimmer</h2>
+    <p class="desc">Trim a video by setting start and end times. Output is saved as WebM.</p>
+    <div class="drop-zone" id="dz-video" onclick="document.getElementById('file-video').click()">
+      Drop a video here or click to browse
+      <input type="file" id="file-video" accept="video/*" onchange="handleVideo(this)">
+    </div>
+    <div class="preview-area" id="preview-video"></div>
+    <div class="range-controls" id="controls-video" style="display:none">
+      <label>Start (s):</label>
+      <input type="number" id="video-start" value="0" min="0" step="0.1">
+      <label>End (s):</label>
+      <input type="number" id="video-end" value="0" min="0" step="0.1">
+      <span id="video-duration" style="color:var(--text-muted);font-size:13px;"></span>
+    </div>
+    <div class="actions" id="actions-video" style="display:none">
+      <button class="btn btn-primary" onclick="trimVideo()">Trim Video</button>
+    </div>
+    <div id="video-status" style="color:var(--text-muted);font-size:13px;margin-top:12px;"></div>
+  </div>
+
+  <!-- MP3 Trimmer -->
+  <div class="tool-panel" id="panel-audio">
+    <h2>MP3 / Audio Trimmer</h2>
+    <p class="desc">Trim an audio file by setting start and end times. Output is saved as WAV.</p>
+    <div class="drop-zone" id="dz-audio" onclick="document.getElementById('file-audio').click()">
+      Drop an audio file here or click to browse
+      <input type="file" id="file-audio" accept="audio/*" onchange="handleAudio(this)">
+    </div>
+    <div class="preview-area" id="preview-audio"></div>
+    <div class="range-controls" id="controls-audio" style="display:none">
+      <label>Start (s):</label>
+      <input type="number" id="audio-start" value="0" min="0" step="0.1">
+      <label>End (s):</label>
+      <input type="number" id="audio-end" value="0" min="0" step="0.1">
+      <span id="audio-duration" style="color:var(--text-muted);font-size:13px;"></span>
+    </div>
+    <div class="actions" id="actions-audio" style="display:none">
+      <button class="btn btn-primary" onclick="trimAudio()">Trim Audio</button>
+    </div>
+    <div id="audio-status" style="color:var(--text-muted);font-size:13px;margin-top:12px;"></div>
+  </div>
+</main>
+
+<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+<footer class="footer">Evan's Playhouse</footer>
+
+<script>
+  // =========== TAB SWITCHING ===========
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // =========== DRAG & DROP ===========
+  document.querySelectorAll('.drop-zone').forEach(dz => {
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      const input = dz.querySelector('input[type="file"]');
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  // =========== COPY HELPER ===========
+  function copyText(id) {
+    const el = document.getElementById(id);
+    el.select();
+    document.execCommand('copy');
+  }
+
+  // =========== IMAGE TO DATA URL ===========
+  function handleDataUrl(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('preview-dataurl').innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+      document.getElementById('dataurl-result').value = e.target.result;
+      document.getElementById('output-dataurl').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // =========== TRANSPARENT BG ===========
+  let transparentImg = null;
+  let transparentCanvas = null;
+
+  function handleTransparent(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = function() {
+      transparentImg = img;
+      document.getElementById('tolerance-row').style.display = 'flex';
+      document.getElementById('actions-transparent').style.display = 'flex';
+      updateTransparent();
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function updateTransparent() {
+    if (!transparentImg) return;
+    const tol = parseInt(document.getElementById('tolerance').value);
+    document.getElementById('tolerance-val').textContent = tol;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = transparentImg.naturalWidth;
+    canvas.height = transparentImg.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(transparentImg, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = data.data;
+
+    // Sample top-left pixel as bg color
+    const bgR = d[0], bgG = d[1], bgB = d[2];
+
+    for (let i = 0; i < d.length; i += 4) {
+      const diff = Math.abs(d[i] - bgR) + Math.abs(d[i+1] - bgG) + Math.abs(d[i+2] - bgB);
+      if (diff < tol * 3) {
+        d[i+3] = 0;
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+    transparentCanvas = canvas;
+
+    const preview = document.getElementById('preview-transparent');
+    preview.innerHTML = '';
+    const displayCanvas = document.createElement('canvas');
+    displayCanvas.width = canvas.width;
+    displayCanvas.height = canvas.height;
+    displayCanvas.style.maxWidth = '100%';
+    displayCanvas.style.maxHeight = '400px';
+    displayCanvas.style.borderRadius = 'var(--radius-sm)';
+    displayCanvas.style.border = '1px solid var(--border)';
+    displayCanvas.style.background = 'repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 16px 16px';
+    const dctx = displayCanvas.getContext('2d');
+    dctx.drawImage(canvas, 0, 0);
+    preview.appendChild(displayCanvas);
+  }
+
+  function downloadTransparent() {
+    if (!transparentCanvas) return;
+    const a = document.createElement('a');
+    a.download = 'transparent.png';
+    a.href = transparentCanvas.toDataURL('image/png');
+    a.click();
+  }
+
+  // =========== IMAGE CROPPER ===========
+  let cropImg = null;
+  let cropStart = null;
+  let cropRect = null;
+
+  function handleCrop(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = function() {
+      cropImg = img;
+      const preview = document.getElementById('preview-crop');
+      preview.innerHTML = '';
+      const container = document.createElement('div');
+      container.className = 'crop-container';
+      const displayImg = document.createElement('img');
+      displayImg.src = img.src;
+      displayImg.style.maxWidth = '100%';
+      displayImg.style.display = 'block';
+      container.appendChild(displayImg);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'crop-overlay';
+      overlay.style.display = 'none';
+      container.appendChild(overlay);
+
+      container.addEventListener('mousedown', e => {
+        const rect = displayImg.getBoundingClientRect();
+        cropStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        overlay.style.display = 'block';
+        overlay.style.left = cropStart.x + 'px';
+        overlay.style.top = cropStart.y + 'px';
+        overlay.style.width = '0';
+        overlay.style.height = '0';
+      });
+
+      container.addEventListener('mousemove', e => {
+        if (!cropStart) return;
+        const rect = displayImg.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const left = Math.min(cropStart.x, x);
+        const top = Math.min(cropStart.y, y);
+        const w = Math.abs(x - cropStart.x);
+        const h = Math.abs(y - cropStart.y);
+        overlay.style.left = left + 'px';
+        overlay.style.top = top + 'px';
+        overlay.style.width = w + 'px';
+        overlay.style.height = h + 'px';
+        const scaleX = img.naturalWidth / displayImg.clientWidth;
+        const scaleY = img.naturalHeight / displayImg.clientHeight;
+        cropRect = { x: left * scaleX, y: top * scaleY, w: w * scaleX, h: h * scaleY };
+      });
+
+      container.addEventListener('mouseup', () => {
+        cropStart = null;
+        if (cropRect && cropRect.w > 5 && cropRect.h > 5) {
+          document.getElementById('actions-crop').style.display = 'flex';
+        }
+      });
+
+      preview.appendChild(container);
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function downloadCrop() {
+    if (!cropImg || !cropRect) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = cropRect.w;
+    canvas.height = cropRect.h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(cropImg, cropRect.x, cropRect.y, cropRect.w, cropRect.h, 0, 0, cropRect.w, cropRect.h);
+    const a = document.createElement('a');
+    a.download = 'cropped.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+
+  // =========== VIDEO TRIMMER ===========
+  let videoFile = null;
+
+  function handleVideo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    videoFile = file;
+    const url = URL.createObjectURL(file);
+    const preview = document.getElementById('preview-video');
+    preview.innerHTML = '<video src="' + url + '" controls style="max-width:100%;max-height:400px;border-radius:var(--radius-sm);border:1px solid var(--border);"></video>';
+    const vid = preview.querySelector('video');
+    vid.onloadedmetadata = function() {
+      const dur = vid.duration.toFixed(1);
+      document.getElementById('video-end').value = dur;
+      document.getElementById('video-duration').textContent = 'Duration: ' + dur + 's';
+      document.getElementById('controls-video').style.display = 'flex';
+      document.getElementById('actions-video').style.display = 'flex';
+    };
+  }
+
+  function trimVideo() {
+    if (!videoFile) return;
+    const start = parseFloat(document.getElementById('video-start').value) || 0;
+    const end = parseFloat(document.getElementById('video-end').value) || 0;
+    if (end <= start) { document.getElementById('video-status').textContent = 'End must be after start.'; return; }
+
+    document.getElementById('video-status').textContent = 'Trimming... this may take a moment.';
+
+    const video = document.createElement('video');
+    video.src = URL.createObjectURL(videoFile);
+    video.muted = true;
+
+    video.onloadedmetadata = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      const stream = canvas.captureStream();
+      // Try to capture audio too
+      try {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+        source.connect(audioCtx.destination);
+        dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+      } catch(e) {}
+
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const a = document.createElement('a');
+        a.download = 'trimmed.webm';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        document.getElementById('video-status').textContent = 'Done! File downloaded.';
+      };
+
+      video.currentTime = start;
+      video.oncanplay = function onCanPlay() {
+        video.oncanplay = null;
+        video.muted = false;
+        video.play();
+        recorder.start();
+
+        const draw = () => {
+          if (video.currentTime >= end || video.ended) {
+            recorder.stop();
+            video.pause();
+            return;
+          }
+          ctx.drawImage(video, 0, 0);
+          requestAnimationFrame(draw);
+        };
+        draw();
+      };
+    };
+  }
+
+  // =========== AUDIO TRIMMER ===========
+  let audioBuffer = null;
+  let audioCtxTrim = null;
+
+  function handleAudio(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const preview = document.getElementById('preview-audio');
+    preview.innerHTML = '<audio src="' + url + '" controls style="width:100%;margin-top:8px;"></audio>';
+    const aud = preview.querySelector('audio');
+    aud.onloadedmetadata = function() {
+      const dur = aud.duration.toFixed(1);
+      document.getElementById('audio-end').value = dur;
+      document.getElementById('audio-duration').textContent = 'Duration: ' + dur + 's';
+      document.getElementById('controls-audio').style.display = 'flex';
+      document.getElementById('actions-audio').style.display = 'flex';
+    };
+
+    // Decode for trimming
+    audioCtxTrim = new (window.AudioContext || window.webkitAudioContext)();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      audioCtxTrim.decodeAudioData(e.target.result, function(buffer) {
+        audioBuffer = buffer;
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function trimAudio() {
+    if (!audioBuffer) { document.getElementById('audio-status').textContent = 'Still loading audio...'; return; }
+    const start = parseFloat(document.getElementById('audio-start').value) || 0;
+    const end = parseFloat(document.getElementById('audio-end').value) || 0;
+    if (end <= start) { document.getElementById('audio-status').textContent = 'End must be after start.'; return; }
+
+    document.getElementById('audio-status').textContent = 'Trimming...';
+
+    const sampleRate = audioBuffer.sampleRate;
+    const startSample = Math.floor(start * sampleRate);
+    const endSample = Math.floor(end * sampleRate);
+    const length = endSample - startSample;
+    const channels = audioBuffer.numberOfChannels;
+
+    const trimmed = audioCtxTrim.createBuffer(channels, length, sampleRate);
+    for (let ch = 0; ch < channels; ch++) {
+      const src = audioBuffer.getChannelData(ch);
+      const dst = trimmed.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        dst[i] = src[startSample + i];
+      }
+    }
+
+    // Encode as WAV
+    const wav = encodeWAV(trimmed);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    const a = document.createElement('a');
+    a.download = 'trimmed.wav';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    document.getElementById('audio-status').textContent = 'Done! File downloaded.';
+  }
+
+  function encodeWAV(buffer) {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataLength = buffer.length * blockAlign;
+    const headerLength = 44;
+    const totalLength = headerLength + dataLength;
+
+    const arrayBuffer = new ArrayBuffer(totalLength);
+    const view = new DataView(arrayBuffer);
+
+    function writeString(offset, str) {
+      for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    }
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, totalLength - 8, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+
+    let offset = 44;
+    const channels = [];
+    for (let ch = 0; ch < numChannels; ch++) channels.push(buffer.getChannelData(ch));
+
+    for (let i = 0; i < buffer.length; i++) {
+      for (let ch = 0; ch < numChannels; ch++) {
+        let sample = channels[ch][i];
+        sample = Math.max(-1, Math.min(1, sample));
+        sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset, sample, true);
+        offset += 2;
+      }
+    }
+
+    return arrayBuffer;
+  }
+</script>
+</body>
+</html>

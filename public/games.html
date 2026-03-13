@@ -4,19 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Games - Evan's Playhouse</title>
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <link rel="stylesheet" href="css/style.css">
 <style>
-  .game-card {
-    position: relative;
-    overflow: hidden;
+  body {
+    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
   }
 
-  .game-card .card-preview {
-    font-size: 12px;
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .game-card {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all var(--transition);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .game-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--shadow);
+    color: inherit;
+  }
+
+  .game-card-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+  }
+
+  .game-card-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .game-card-body h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+    color: var(--text-heading);
+  }
+
+  .game-card-body p {
     color: var(--text-muted);
-    margin-top: 8px;
-    padding-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .game-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
+  }
+
+  .game-card-footer .card-tag { margin-top: 0; }
+  .game-card-footer .hint { font-size: 12px; color: var(--text-muted); }
+
+  .game-card-placeholder {
+    width: 100%;
+    height: 160px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--accent);
+    opacity: 0.4;
   }
 </style>
 </head>
@@ -35,6 +111,7 @@
       <li><a href="/games.html" class="active">Games</a></li>
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
@@ -46,45 +123,65 @@
     <p>Pick something and play. Scores are saved locally.</p>
   </div>
 
-  <div class="card-grid">
-    <a href="/games/rhythm.html" class="card game-card">
-      <div class="card-icon">/\/\</div>
-      <h3>Rhythm Game</h3>
-      <p>Voice-controlled rhythm game. Hit arrows to the beat with your voice or keyboard.</p>
-      <div class="card-preview">60 second song -- arrow keys or voice</div>
-      <span class="card-tag">Music</span>
+  <div class="games-grid">
+    <a href="/games/rhythm.html" class="game-card">
+      <img src="https://image2url.com/r2/default/images/1773360207498-8395ed1f-e159-423e-8a3e-e0c7a9668076.png" alt="Rhythm Game" class="game-card-img">
+      <div class="game-card-body">
+        <h3>Rhythm Game</h3>
+        <p>Hit arrows to the beat with your voice or keyboard. Can you get an S rank?</p>
+        <div class="game-card-footer">
+          <span class="card-tag">Music</span>
+          <span class="hint">60 sec -- keys or voice</span>
+        </div>
+      </div>
     </a>
 
-    <a href="/games/snake.html" class="card game-card">
-      <div class="card-icon">~&gt;</div>
-      <h3>Snake</h3>
-      <p>Classic snake. Eat, grow, don't crash. Simple as that.</p>
-      <div class="card-preview">Arrow keys to move</div>
-      <span class="card-tag">Classic</span>
+    <a href="/games/snake.html" class="game-card">
+      <div class="game-card-placeholder">~&gt;</div>
+      <div class="game-card-body">
+        <h3>Snake</h3>
+        <p>Classic snake. Eat, grow, don't crash. Simple as that.</p>
+        <div class="game-card-footer">
+          <span class="card-tag">Classic</span>
+          <span class="hint">Arrow keys or WASD</span>
+        </div>
+      </div>
     </a>
 
-    <a href="/games/tictactoe.html" class="card game-card">
-      <div class="card-icon">X|O</div>
-      <h3>Tic-Tac-Toe</h3>
-      <p>Play against a friend or challenge the computer.</p>
-      <div class="card-preview">2 player or vs AI</div>
-      <span class="card-tag">Strategy</span>
+    <a href="/games/tictactoe.html" class="game-card">
+      <img src="https://image2url.com/r2/default/images/1773360207498-8395ed1f-e159-423e-8a3e-e0c7a9668076.png" alt="Tic-Tac-Toe" class="game-card-img">
+      <div class="game-card-body">
+        <h3>Tic-Tac-Toe</h3>
+        <p>Play against a friend or challenge the computer.</p>
+        <div class="game-card-footer">
+          <span class="card-tag">Strategy</span>
+          <span class="hint">2 player or vs AI</span>
+        </div>
+      </div>
     </a>
 
-    <a href="/games/memory.html" class="card game-card">
-      <div class="card-icon">[?]</div>
-      <h3>Memory Match</h3>
-      <p>Flip cards and find matching pairs. Test your memory.</p>
-      <div class="card-preview">Match all pairs to win</div>
-      <span class="card-tag">Puzzle</span>
+    <a href="/games/sudoku.html" class="game-card">
+      <div class="game-card-placeholder">9x9</div>
+      <div class="game-card-body">
+        <h3>Sudoku</h3>
+        <p>Fill in the grid. Every row, column, and box needs 1-9. No repeats.</p>
+        <div class="game-card-footer">
+          <span class="card-tag">Puzzle</span>
+          <span class="hint">3 difficulties</span>
+        </div>
+      </div>
     </a>
 
-    <a href="/games/typing.html" class="card game-card">
-      <div class="card-icon">_|</div>
-      <h3>Typing Test</h3>
-      <p>How fast can you type? Find out your WPM.</p>
-      <div class="card-preview">30 second test</div>
-      <span class="card-tag">Speed</span>
+    <a href="/games/typing.html" class="game-card">
+      <div class="game-card-placeholder">_|</div>
+      <div class="game-card-body">
+        <h3>Typing Test</h3>
+        <p>How fast can you type? Find out your WPM.</p>
+        <div class="game-card-footer">
+          <span class="card-tag">Speed</span>
+          <span class="hint">30 second test</span>
+        </div>
+      </div>
     </a>
   </div>
 </main>
