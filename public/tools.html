@@ -199,6 +199,8 @@
     min-height: 220px;
     animation: pageIn 0.35s ease;
     transform-origin: left center;
+    display: flex;
+    flex-direction: column;
   }
 
   @keyframes pageIn {
@@ -266,7 +268,8 @@
   .journal-page-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 12px;
+    margin-top: auto;
+    padding-top: 12px;
   }
 
   .journal-entry-delete {
@@ -416,9 +419,9 @@
         <div class="journal-entries" id="journalEntries">
           <div class="journal-notebook" id="journalNotebook"></div>
           <div class="journal-nav" id="journalNav" style="display:none;">
-            <button class="journal-nav-btn" id="journalPrev" onclick="flipPage(-1)">&larr; Prev</button>
+            <button class="journal-nav-btn" id="journalPrev" onclick="flipPage(1)">&larr; Prev</button>
             <span class="journal-page-counter" id="journalCounter"></span>
-            <button class="journal-nav-btn" id="journalNext" onclick="flipPage(1)">Next &rarr;</button>
+            <button class="journal-nav-btn" id="journalNext" onclick="flipPage(-1)">Next &rarr;</button>
           </div>
         </div>
       </div>
