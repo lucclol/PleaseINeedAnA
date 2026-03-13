@@ -252,14 +252,21 @@
   <!-- Image Cropper -->
   <div class="tool-panel" id="panel-crop">
     <h2>Image Cropper</h2>
-    <p class="desc">Click and drag on the image to select a crop area.</p>
+    <p class="desc">Upload an image and use the sliders to adjust each edge.</p>
     <div class="drop-zone" id="dz-crop" onclick="document.getElementById('file-crop').click()">
       Drop an image here or click to browse
       <input type="file" id="file-crop" accept="image/*" onchange="handleCrop(this)">
     </div>
+    <div id="crop-sliders" style="display:none;">
+      <div class="slider-row"><label>Left</label><input type="range" id="cropLeft" min="0" max="100" value="0" oninput="updateCropPreview()"><span class="val" id="cropLeftVal">0%</span></div>
+      <div class="slider-row"><label>Right</label><input type="range" id="cropRight" min="0" max="100" value="100" oninput="updateCropPreview()"><span class="val" id="cropRightVal">100%</span></div>
+      <div class="slider-row"><label>Top</label><input type="range" id="cropTop" min="0" max="100" value="0" oninput="updateCropPreview()"><span class="val" id="cropTopVal">0%</span></div>
+      <div class="slider-row"><label>Bottom</label><input type="range" id="cropBottom" min="0" max="100" value="100" oninput="updateCropPreview()"><span class="val" id="cropBottomVal">100%</span></div>
+    </div>
     <div class="preview-area" id="preview-crop"></div>
     <div class="actions" id="actions-crop" style="display:none">
       <button class="btn btn-primary" onclick="downloadCrop()">Download Cropped</button>
+      <button class="btn btn-secondary" onclick="resetCropSliders()">Reset</button>
     </div>
   </div>
 
@@ -450,8 +457,6 @@
 
   // =========== IMAGE CROPPER ===========
   let cropImg = null;
-  let cropStart = null;
-  let cropRect = null;
 
   function handleCrop(input) {
     const file = input.files[0];
@@ -459,68 +464,72 @@
     const img = new Image();
     img.onload = function() {
       cropImg = img;
-      const preview = document.getElementById('preview-crop');
-      preview.innerHTML = '';
-      const container = document.createElement('div');
-      container.className = 'crop-container';
-      const displayImg = document.createElement('img');
-      displayImg.src = img.src;
-      displayImg.style.maxWidth = '100%';
-      displayImg.style.display = 'block';
-      container.appendChild(displayImg);
-
-      const overlay = document.createElement('div');
-      overlay.className = 'crop-overlay';
-      overlay.style.display = 'none';
-      container.appendChild(overlay);
-
-      container.addEventListener('mousedown', e => {
-        const rect = displayImg.getBoundingClientRect();
-        cropStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-        overlay.style.display = 'block';
-        overlay.style.left = cropStart.x + 'px';
-        overlay.style.top = cropStart.y + 'px';
-        overlay.style.width = '0';
-        overlay.style.height = '0';
-      });
-
-      container.addEventListener('mousemove', e => {
-        if (!cropStart) return;
-        const rect = displayImg.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const left = Math.min(cropStart.x, x);
-        const top = Math.min(cropStart.y, y);
-        const w = Math.abs(x - cropStart.x);
-        const h = Math.abs(y - cropStart.y);
-        overlay.style.left = left + 'px';
-        overlay.style.top = top + 'px';
-        overlay.style.width = w + 'px';
-        overlay.style.height = h + 'px';
-        const scaleX = img.naturalWidth / displayImg.clientWidth;
-        const scaleY = img.naturalHeight / displayImg.clientHeight;
-        cropRect = { x: left * scaleX, y: top * scaleY, w: w * scaleX, h: h * scaleY };
-      });
-
-      container.addEventListener('mouseup', () => {
-        cropStart = null;
-        if (cropRect && cropRect.w > 5 && cropRect.h > 5) {
-          document.getElementById('actions-crop').style.display = 'flex';
-        }
-      });
-
-      preview.appendChild(container);
+      document.getElementById('crop-sliders').style.display = 'block';
+      document.getElementById('actions-crop').style.display = 'flex';
+      resetCropSliders();
+      updateCropPreview();
     };
     img.src = URL.createObjectURL(file);
   }
 
-  function downloadCrop() {
-    if (!cropImg || !cropRect) return;
+  function resetCropSliders() {
+    document.getElementById('cropLeft').value = 0;
+    document.getElementById('cropRight').value = 100;
+    document.getElementById('cropTop').value = 0;
+    document.getElementById('cropBottom').value = 100;
+    updateCropPreview();
+  }
+
+  function updateCropPreview() {
+    if (!cropImg) return;
+    const left = parseInt(document.getElementById('cropLeft').value);
+    const right = parseInt(document.getElementById('cropRight').value);
+    const top = parseInt(document.getElementById('cropTop').value);
+    const bottom = parseInt(document.getElementById('cropBottom').value);
+    document.getElementById('cropLeftVal').textContent = left + '%';
+    document.getElementById('cropRightVal').textContent = right + '%';
+    document.getElementById('cropTopVal').textContent = top + '%';
+    document.getElementById('cropBottomVal').textContent = bottom + '%';
+
+    const w = cropImg.naturalWidth;
+    const h = cropImg.naturalHeight;
+    const sx = Math.floor(w * left / 100);
+    const sy = Math.floor(h * top / 100);
+    const sw = Math.max(1, Math.floor(w * right / 100) - sx);
+    const sh = Math.max(1, Math.floor(h * bottom / 100) - sy);
+
     const canvas = document.createElement('canvas');
-    canvas.width = cropRect.w;
-    canvas.height = cropRect.h;
+    canvas.width = sw;
+    canvas.height = sh;
+    canvas.style.maxWidth = '100%';
+    canvas.style.maxHeight = '400px';
+    canvas.style.borderRadius = 'var(--radius-sm)';
+    canvas.style.border = '1px solid var(--border)';
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(cropImg, cropRect.x, cropRect.y, cropRect.w, cropRect.h, 0, 0, cropRect.w, cropRect.h);
+    ctx.drawImage(cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    const preview = document.getElementById('preview-crop');
+    preview.innerHTML = '';
+    preview.appendChild(canvas);
+  }
+
+  function downloadCrop() {
+    if (!cropImg) return;
+    const left = parseInt(document.getElementById('cropLeft').value);
+    const right = parseInt(document.getElementById('cropRight').value);
+    const top = parseInt(document.getElementById('cropTop').value);
+    const bottom = parseInt(document.getElementById('cropBottom').value);
+    const w = cropImg.naturalWidth;
+    const h = cropImg.naturalHeight;
+    const sx = Math.floor(w * left / 100);
+    const sy = Math.floor(h * top / 100);
+    const sw = Math.max(1, Math.floor(w * right / 100) - sx);
+    const sh = Math.max(1, Math.floor(h * bottom / 100) - sy);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = sw;
+    canvas.height = sh;
+    canvas.getContext('2d').drawImage(cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
     const a = document.createElement('a');
     a.download = 'cropped.png';
     a.href = canvas.toDataURL('image/png');

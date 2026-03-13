@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Player - Evan's Lounge</title>
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
+<script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { margin: 0; padding: 12px; min-height: 100vh; background: var(--bg); }
+  .pp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .pp-title { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading); font-weight: 600; }
+  .pp-now { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; min-height: 20px; }
+  .pp-embed { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+  .pp-embed iframe { width: 100%; border: none; border-radius: 8px; }
+  .pp-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .pp-btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; transition: all 0.2s; font-family: inherit; }
+  .pp-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pp-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pp-queue { list-style: none; padding: 0; margin: 0; }
+  .pp-queue li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 12px; color: var(--text); cursor: pointer; transition: background 0.2s; }
+  .pp-queue li:hover { background: var(--bg-surface); }
+  .pp-queue li.active { background: var(--accent-dim); color: var(--accent); }
+  .pp-queue-num { font-weight: 700; color: var(--text-muted); min-width: 18px; }
+  .pp-queue li.active .pp-queue-num { color: var(--accent); }
+  .pp-queue-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pp-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+  .pp-badge.yt { background: rgba(255,0,0,0.12); color: #e44; }
+  .pp-badge.sp { background: rgba(30,215,96,0.12); color: #1db954; }
+  .pp-badge.file { background: var(--accent-dim); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="pp-header">
+  <span class="pp-title">Music Player</span>
+  <span style="font-size:11px;color:var(--text-muted);" id="ppCount">0 songs</span>
+</div>
+<div class="pp-now" id="ppNow">Nothing playing</div>
+<div class="pp-embed" id="ppEmbed"></div>
+<div class="pp-controls">
+  <button class="pp-btn" onclick="navigate(-1)">&#9664;&#9664;</button>
+  <button class="pp-btn" onclick="navigate(1)">&#9654;&#9654; Next</button>
+</div>
+<ul class="pp-queue" id="ppQueue"></ul>
+
+<script>
+var queue = [];
+var currentIndex = -1;
+var ytPlayer = null;
+var ytApiReady = false;
+
+// Load YouTube IFrame API
+var tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
+window.onYouTubeIframeAPIReady = function() { ytApiReady = true; };
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem('ep_music_queue') || 'null'); } catch(e) { return null; }
+}
+
+function saveState() {
+  var saveable = queue.filter(function(q) { return q.type !== 'file'; }).map(function(q) {
+    return { type: q.type, id: q.id, label: q.label, spType: q.spType };
+  });
+  try { localStorage.setItem('ep_music_queue', JSON.stringify({ queue: saveable, currentIndex: currentIndex, time: Date.now() })); } catch(e) {}
+}
+
+function loadQueue() {
+  var state = getState();
+  if (!state || !state.queue) return;
+  queue = state.queue;
+  currentIndex = state.currentIndex;
+  renderQueue();
+  if (currentIndex >= 0 && currentIndex < queue.length) {
+    playSong(currentIndex);
+  }
+}
+
+function playSong(index) {
+  if (index < 0 || index >= queue.length) return;
+  currentIndex = index;
+  var item = queue[index];
+  var embed = document.getElementById('ppEmbed');
+  document.getElementById('ppNow').textContent = 'Now playing: ' + item.label;
+
+  if (item.type === 'yt') {
+    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+    embed.innerHTML = '<div id="ytDiv"></div>';
+    function createPlayer() {
+      ytPlayer = new YT.Player('ytDiv', {
+        height: '180',
+        width: '100%',
+        videoId: item.id,
+        playerVars: { autoplay: 1 },
+        events: {
+          onStateChange: function(event) {
+            if (event.data === YT.PlayerState.ENDED) navigate(1);
+          }
+        }
+      });
+    }
+    if (ytApiReady) createPlayer();
+    else { var w = setInterval(function() { if (ytApiReady) { clearInterval(w); createPlayer(); } }, 200); }
+  } else if (item.type === 'sp') {
+    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+    var spType = item.spType || 'track';
+    embed.innerHTML = '<iframe src="https://open.spotify.com/embed/' + spType + '/' + item.id + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
+  }
+
+  saveState();
+  renderQueue();
+}
+
+function navigate(dir) {
+  var next = currentIndex + dir;
+  if (next < 0) next = 0;
+  if (next >= queue.length) {
+    document.getElementById('ppNow').textContent = 'Queue finished!';
+    currentIndex = -1;
+    saveState();
+    renderQueue();
+    return;
+  }
+  playSong(next);
+}
+
+window.playFromQueue = function(i) { playSong(i); };
+
+function renderQueue() {
+  var list = document.getElementById('ppQueue');
+  document.getElementById('ppCount').textContent = queue.length + ' song' + (queue.length !== 1 ? 's' : '');
+  if (queue.length === 0) { list.innerHTML = '<li style="color:var(--text-muted);padding:16px;text-align:center;">Queue empty</li>'; return; }
+  list.innerHTML = '';
+  queue.forEach(function(item, i) {
+    var li = document.createElement('li');
+    li.className = i === currentIndex ? 'active' : '';
+    li.onclick = function() { playSong(i); };
+    var badge = item.type === 'yt' ? 'yt' : item.type === 'sp' ? 'sp' : 'file';
+    var badgeText = item.type === 'yt' ? 'YT' : item.type === 'sp' ? 'SP' : 'FILE';
+    li.innerHTML = '<span class="pp-queue-num">' + (i+1) + '</span><span class="pp-badge ' + badge + '">' + badgeText + '</span><span class="pp-queue-name">' + escHtml(item.label) + '</span>';
+    list.appendChild(li);
+  });
+}
+
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// Listen for queue changes from other tabs
+window.addEventListener('storage', function(e) {
+  if (e.key === 'ep_music_queue') {
+    var state = getState();
+    if (state && state.queue) {
+      var oldLen = queue.length;
+      queue = state.queue;
+      // Only change song if queue grew (new song added from lounge)
+      if (state.queue.length > oldLen && state.currentIndex !== currentIndex) {
+        currentIndex = state.currentIndex;
+        playSong(currentIndex);
+      } else {
+        renderQueue();
+      }
+    }
+  }
+});
+
+// Signal that popup is open
+localStorage.setItem('ep_popup_player', 'open');
+window.addEventListener('beforeunload', function() {
+  localStorage.removeItem('ep_popup_player');
+});
+
+loadQueue();
+</script>
+</body>
+</html>

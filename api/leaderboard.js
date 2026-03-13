@@ -1,5 +1,13 @@
 let kv;
-try { kv = require('@vercel/kv').kv; } catch (e) { kv = null; }
+try {
+  const mod = require('@vercel/kv');
+  if (process.env.KV_REST_API_URL || process.env.ec_KV_REST_API_URL) {
+    kv = mod.createClient({
+      url: process.env.KV_REST_API_URL || process.env.ec_KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN || process.env.ec_KV_REST_API_TOKEN
+    });
+  }
+} catch (e) { kv = null; }
 
 // In-memory fallback when KV is not configured
 let memoryData = { snake: [], rhythm: [], typing: [] };
