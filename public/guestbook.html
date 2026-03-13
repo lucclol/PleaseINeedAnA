@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -84,6 +84,46 @@
     color: var(--text);
   }
 
+  .gb-entry-img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--radius-sm);
+    margin-top: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .gb-img-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-right: 8px;
+  }
+
+  .gb-img-label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .gb-img-preview {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .gb-img-preview img {
+    max-width: 150px;
+    max-height: 100px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
   .gb-empty {
     text-align: center;
     color: var(--text-muted);
@@ -102,12 +142,12 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
-      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
       <span>Evan's Playhouse</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
-      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
       <li><a href="/dashboard.html">Dashboard</a></li>
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html">About</a></li>
@@ -127,7 +167,14 @@
   <div class="gb-form">
     <input type="text" id="gbName" placeholder="Your name" maxlength="50">
     <textarea id="gbMsg" rows="3" placeholder="Write something..." maxlength="500"></textarea>
-    <button class="btn btn-primary" onclick="postEntry()">Post</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <label class="gb-img-label">
+        Attach image
+        <input type="file" id="gbImgInput" accept="image/*" style="display:none" onchange="previewGbImg(this)">
+      </label>
+      <button class="btn btn-primary" onclick="postEntry()">Post</button>
+    </div>
+    <div class="gb-img-preview" id="gbImgPreview"></div>
   </div>
 
   <div class="gb-entries" id="gbEntries">
@@ -139,12 +186,45 @@
   </div>
 </main>
 
-<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
 
 <footer class="footer">Evan's Playhouse</footer>
 
 <script>
   let entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
+  let gbPendingImg = null;
+
+  function previewGbImg(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 500000) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 600;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        gbPendingImg = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('gbImgPreview').innerHTML = '<img src="' + gbPendingImg + '"> <button class="gb-img-label" onclick="clearGbImg()" style="padding:4px 8px">x</button>';
+      };
+      img.src = URL.createObjectURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        gbPendingImg = e.target.result;
+        document.getElementById('gbImgPreview').innerHTML = '<img src="' + gbPendingImg + '"> <button class="gb-img-label" onclick="clearGbImg()" style="padding:4px 8px">x</button>';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearGbImg() {
+    gbPendingImg = null;
+    document.getElementById('gbImgPreview').innerHTML = '';
+    document.getElementById('gbImgInput').value = '';
+  }
 
   function renderEntries() {
     entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
@@ -159,8 +239,12 @@
       div.className = 'gb-entry';
       const date = new Date(e.time);
       const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      div.innerHTML = '<div class="gb-entry-header"><span class="gb-entry-name">' + escHtml(e.name) + '</span><span class="gb-entry-date">' + dateStr + '</span></div>'
+      let html = '<div class="gb-entry-header"><span class="gb-entry-name">' + escHtml(e.name) + '</span><span class="gb-entry-date">' + dateStr + '</span></div>'
         + '<div class="gb-entry-msg">' + escHtml(e.msg) + '</div>';
+      if (e.img) {
+        html += '<img class="gb-entry-img" src="' + e.img + '" alt="Attached image">';
+      }
+      div.innerHTML = html;
       container.appendChild(div);
     });
   }
@@ -168,14 +252,22 @@
   function postEntry() {
     const name = document.getElementById('gbName').value.trim() || 'Anonymous';
     const msg = document.getElementById('gbMsg').value.trim();
-    if (!msg) return;
-    entries.push({ name, msg, time: new Date().toISOString() });
-    localStorage.setItem('ep_guestbook', JSON.stringify(entries));
+    if (!msg && !gbPendingImg) return;
+    const entry = { name, msg: msg || '', time: new Date().toISOString() };
+    if (gbPendingImg) entry.img = gbPendingImg;
+    entries.push(entry);
+    try {
+      localStorage.setItem('ep_guestbook', JSON.stringify(entries));
+    } catch(e) {
+      alert('Storage full! Try removing old entries or using smaller images.');
+      entries.pop();
+      return;
+    }
     document.getElementById('gbName').value = '';
     document.getElementById('gbMsg').value = '';
+    clearGbImg();
     renderEntries();
 
-    // Log activity
     const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
     log.push({ text: name + ' signed the guestbook', time: new Date().toISOString() });
     if (log.length > 50) log.splice(0, log.length - 50);
@@ -189,6 +281,19 @@
   }
 
   renderEntries();
+</script>
+
+<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
+<div class="settings-panel">
+  <h4>Settings</h4>
+  <div class="theme-toggle">
+    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
+    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
+  </div>
+</div>
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'');localStorage.setItem('ep_theme',t);document.getElementById('themeLight').classList.toggle('active',t==='light');document.getElementById('themeDark').classList.toggle('active',t==='dark');}
+(function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
 </script>
 
 </body>
