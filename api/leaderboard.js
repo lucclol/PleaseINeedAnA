@@ -10,12 +10,12 @@ try {
 } catch (e) { kv = null; }
 
 // In-memory fallback when KV is not configured
-let memoryData = { snake: [], rhythm: [], typing: [] };
+let memoryData = { snake: [], rhythm: [], typing: [], tetris: [] };
 
 async function getData() {
   if (kv) {
     try {
-      return (await kv.get('leaderboard_data')) || { snake: [], rhythm: [], typing: [] };
+      return (await kv.get('leaderboard_data')) || { snake: [], rhythm: [], typing: [], tetris: [] };
     } catch (e) { /* fall through to memory */ }
   }
   return memoryData;
@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
       if (!game || !name || score === undefined) {
         return res.status(400).json({ error: 'Missing game, name, or score' });
       }
-      const validGames = ['snake', 'rhythm', 'typing'];
+      const validGames = ['snake', 'rhythm', 'typing', 'tetris'];
       if (!validGames.includes(game)) {
         return res.status(400).json({ error: 'Invalid game' });
       }
