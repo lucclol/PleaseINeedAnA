@@ -147,7 +147,7 @@
     color: var(--accent);
   }
 
-  /* Journal */
+  /* Journal — notebook style */
   .journal-container {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -163,6 +163,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 14px;
+    padding-left: 48px;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
@@ -170,6 +171,12 @@
     outline: none;
     resize: vertical;
     margin-bottom: 12px;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+    background-size: 100% 1.7em, 38px 100%;
+    background-position: 0 14px, 38px 0;
+    background-attachment: local;
   }
 
   .journal-textarea:focus {
@@ -187,21 +194,76 @@
   .journal-entry {
     background: var(--bg-surface);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
     border-radius: var(--radius-sm);
-    padding: 16px;
     margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .journal-entry:hover {
+    border-left-color: var(--text-heading);
   }
 
   .journal-entry-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    gap: 8px;
+  }
+
+  .journal-entry-header:hover {
+    background: rgba(201, 168, 124, 0.04);
+  }
+
+  .journal-entry-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .journal-entry-arrow {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .journal-entry.open .journal-entry-arrow {
+    transform: rotate(90deg);
+  }
+
+  .journal-entry-preview {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .journal-entry.open .journal-entry-preview {
+    display: none;
   }
 
   .journal-entry-date {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .journal-entry-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
   }
 
   .journal-entry-delete {
@@ -218,6 +280,27 @@
   .journal-entry-delete:hover {
     color: #b57c7c;
     background: rgba(181, 124, 124, 0.1);
+  }
+
+  .journal-entry-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .journal-entry.open .journal-entry-body {
+    max-height: 2000px;
+  }
+
+  .journal-entry-content {
+    padding: 0 16px 16px;
+    padding-left: 48px;
+    position: relative;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+    background-size: 100% 1.6em, 38px 100%;
+    background-position: 0 0, 38px 0;
   }
 
   .journal-entry-text {
@@ -462,17 +545,31 @@
     journalEntries.slice().reverse().forEach((entry, ri) => {
       const i = journalEntries.length - 1 - ri;
       const div = document.createElement('div');
-      div.className = 'journal-entry';
+      div.className = 'journal-entry' + (ri === 0 ? ' open' : '');
       const date = new Date(entry.time);
       const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      let html = '<div class="journal-entry-header"><span class="journal-entry-date">' + dateStr + '</span><button class="journal-entry-delete" onclick="deleteJournalEntry(' + i + ')">x</button></div>'
+      const preview = (entry.text || '').slice(0, 80) || (entry.img ? '(image)' : '');
+      let html = '<div class="journal-entry-header" onclick="toggleJournal(this)">'
+        + '<div class="journal-entry-toggle">'
+        + '<span class="journal-entry-arrow">&#9654;</span>'
+        + '<span class="journal-entry-preview">' + escHtml(preview) + '</span>'
+        + '</div>'
+        + '<span class="journal-entry-date">' + dateStr + '</span>'
+        + '<div class="journal-entry-actions"><button class="journal-entry-delete" onclick="event.stopPropagation();deleteJournalEntry(' + i + ')">x</button></div>'
+        + '</div>'
+        + '<div class="journal-entry-body"><div class="journal-entry-content">'
         + '<div class="journal-entry-text">' + escHtml(entry.text) + '</div>';
       if (entry.img) {
         html += '<img class="journal-entry-img" src="' + entry.img + '" alt="Journal image">';
       }
+      html += '</div></div>';
       div.innerHTML = html;
       container.appendChild(div);
     });
+  }
+
+  function toggleJournal(header) {
+    header.closest('.journal-entry').classList.toggle('open');
   }
 
   function addJournalEntry() {
