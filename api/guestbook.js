@@ -1,4 +1,28 @@
-const { kv } = require('@vercel/kv');
+let kv;
+try { kv = require('@vercel/kv').kv; } catch (e) { kv = null; }
+
+// In-memory fallback when KV is not configured
+// Persists across requests within the same serverless instance
+let memoryEntries = [];
+
+async function getEntries() {
+  if (kv) {
+    try {
+      return (await kv.get('guestbook_entries')) || [];
+    } catch (e) { /* fall through to memory */ }
+  }
+  return memoryEntries;
+}
+
+async function saveEntries(entries) {
+  if (kv) {
+    try {
+      await kv.set('guestbook_entries', entries);
+      return;
+    } catch (e) { /* fall through to memory */ }
+  }
+  memoryEntries = entries;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,12 +32,12 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const entries = (await kv.get('guestbook_entries')) || [];
+      const entries = await getEntries();
       return res.status(200).json(entries);
     }
 
     if (req.method === 'POST') {
-      const entries = (await kv.get('guestbook_entries')) || [];
+      const entries = await getEntries();
       const { name, msg, img, audio, authorToken } = req.body;
       const entry = {
         id: Date.now(),
@@ -26,7 +50,7 @@ module.exports = async function handler(req, res) {
       if (audio && audio.length < 200000) entry.audio = audio;
       entries.push(entry);
       if (entries.length > 200) entries.splice(0, entries.length - 200);
-      await kv.set('guestbook_entries', entries);
+      await saveEntries(entries);
       return res.status(200).json(entry);
     }
 
@@ -35,17 +59,16 @@ module.exports = async function handler(req, res) {
 
       // Clear all entries (owner only)
       if (!id && password === 'evan') {
-        await kv.set('guestbook_entries', []);
+        await saveEntries([]);
         return res.status(200).json({ ok: true });
       }
 
       // Delete single entry by id
       if (id) {
-        const entries = (await kv.get('guestbook_entries')) || [];
+        const entries = await getEntries();
         const entry = entries.find(e => e.id === id);
         if (!entry) return res.status(404).json({ error: 'Entry not found' });
 
-        // Owner can delete any entry, author can delete their own
         const isOwner = password === 'evan';
         const isAuthor = authorToken && entry.authorToken === authorToken;
         if (!isOwner && !isAuthor) {
@@ -53,7 +76,7 @@ module.exports = async function handler(req, res) {
         }
 
         const filtered = entries.filter(e => e.id !== id);
-        await kv.set('guestbook_entries', filtered);
+        await saveEntries(filtered);
         return res.status(200).json({ ok: true });
       }
 
@@ -62,9 +85,6 @@ module.exports = async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
-    return res.status(500).json({
-      error: 'Database not configured. Add a Vercel KV store from your Vercel dashboard.',
-      details: err.message
-    });
+    return res.status(500).json({ error: err.message });
   }
 };
