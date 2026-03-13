@@ -176,6 +176,7 @@
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html">Lounge</a></li>
+      <li><a href="/leaderboard.html">Leaderboard</a></li>
       <li><a href="/guestbook.html" class="active">Guestbook</a></li>
     </ul>
   </div>
@@ -184,7 +185,7 @@
 <main class="page">
   <div class="page-header">
     <h1>Guestbook</h1>
-    <p>Leave a message. Say whatever you want. It's saved in your browser.</p>
+    <p>Leave a message. Say whatever you want. Everyone can see it!</p>
   </div>
 
   <div class="gb-form">
@@ -219,10 +220,11 @@
 <footer class="footer">Evan's Playhouse</footer>
 
 <script>
-  let entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
+  let entries = [];
   let gbPendingImg = null;
   let gbPendingAudio = null;
   let gbPendingAudioName = null;
+  let useAPI = true;
 
   function previewGbImg(input) {
     const file = input.files[0];
@@ -276,8 +278,21 @@
     document.getElementById('gbAudioInput').value = '';
   }
 
+  async function loadEntries() {
+    try {
+      const res = await fetch('/api/guestbook');
+      if (!res.ok) throw new Error('API error');
+      entries = await res.json();
+      useAPI = true;
+    } catch (e) {
+      // Fall back to localStorage if API not available
+      useAPI = false;
+      entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
+    }
+    renderEntries();
+  }
+
   function renderEntries() {
-    entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
     const container = document.getElementById('gbEntries');
     if (entries.length === 0) {
       container.innerHTML = '<div class="gb-empty">No entries yet. Be the first to sign!</div>';
@@ -302,26 +317,39 @@
     });
   }
 
-  function postEntry() {
+  async function postEntry() {
     const name = document.getElementById('gbName').value.trim() || 'Anonymous';
     const msg = document.getElementById('gbMsg').value.trim();
     if (!msg && !gbPendingImg && !gbPendingAudio) return;
-    const entry = { name, msg: msg || '', time: new Date().toISOString() };
+    const entry = { name, msg: msg || '' };
     if (gbPendingImg) entry.img = gbPendingImg;
     if (gbPendingAudio) entry.audio = gbPendingAudio;
-    entries.push(entry);
-    try {
-      localStorage.setItem('ep_guestbook', JSON.stringify(entries));
-    } catch(e) {
-      alert('Storage full! Try removing old entries or using smaller files.');
-      entries.pop();
-      return;
+
+    if (useAPI) {
+      try {
+        const res = await fetch('/api/guestbook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        });
+        if (!res.ok) throw new Error('Post failed');
+      } catch (e) {
+        // Fall back to localStorage
+        entry.time = new Date().toISOString();
+        entries.push(entry);
+        try { localStorage.setItem('ep_guestbook', JSON.stringify(entries)); } catch(e) {}
+      }
+    } else {
+      entry.time = new Date().toISOString();
+      entries.push(entry);
+      try { localStorage.setItem('ep_guestbook', JSON.stringify(entries)); } catch(e) {}
     }
+
     document.getElementById('gbName').value = '';
     document.getElementById('gbMsg').value = '';
     clearGbImg();
     clearGbAudio();
-    renderEntries();
+    await loadEntries();
 
     const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
     log.push({ text: name + ' signed the guestbook', time: new Date().toISOString() });
@@ -335,9 +363,18 @@
     return d.innerHTML;
   }
 
-  function clearGuestbook() {
+  async function clearGuestbook() {
     const pw = prompt('Enter the owner password to clear all entries:');
     if (pw === 'evan') {
+      if (useAPI) {
+        try {
+          await fetch('/api/guestbook', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw })
+          });
+        } catch (e) {}
+      }
       localStorage.removeItem('ep_guestbook');
       entries = [];
       renderEntries();
@@ -346,7 +383,7 @@
     }
   }
 
-  renderEntries();
+  loadEntries();
 </script>
 
 <button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
