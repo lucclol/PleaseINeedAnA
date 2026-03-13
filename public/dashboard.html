@@ -141,6 +141,8 @@
       <div class="stat-row"><span class="label">Rhythm Game Best</span><span class="value" id="rhythmBest">--</span></div>
       <div class="stat-row"><span class="label">Snake Best</span><span class="value" id="snakeBest">--</span></div>
       <div class="stat-row"><span class="label">Typing Speed</span><span class="value" id="typingBest">--</span></div>
+      <div class="stat-row"><span class="label">Tetris Best</span><span class="value" id="tetrisBest">--</span></div>
+      <div class="stat-row"><span class="label">Tetris Lines</span><span class="value" id="tetrisLines">--</span></div>
     </div>
     <div class="dash-panel">
       <h3>Recent Activity</h3>
@@ -158,6 +160,7 @@
       <a href="/games/tictactoe.html">Tic-Tac-Toe</a>
       <a href="/games/sudoku.html">Sudoku</a>
       <a href="/games/typing.html">Typing Test</a>
+      <a href="/games/tetris.html">Tetris</a>
       <a href="/media-tools.html">Media Tools</a>
       <a href="/tools.html">Journal / Timer</a>
       <a href="/guestbook.html">Guestbook</a>
@@ -173,6 +176,7 @@
         <div class="lb-local-score">Snake Best: <strong id="localSnake">--</strong></div>
         <div class="lb-local-score">Rhythm Best: <strong id="localRhythm">--</strong></div>
         <div class="lb-local-score">Typing Best: <strong id="localTyping">--</strong> WPM</div>
+        <div class="lb-local-score">Tetris Best: <strong id="localTetris">--</strong></div>
       </div>
       <p>Enter your name and pick a game to submit your local high score.</p>
       <div class="lb-form">
@@ -180,6 +184,7 @@
         <button class="btn btn-secondary" onclick="submitScore('snake')">Submit Snake</button>
         <button class="btn btn-secondary" onclick="submitScore('rhythm')">Submit Rhythm</button>
         <button class="btn btn-secondary" onclick="submitScore('typing')">Submit Typing</button>
+        <button class="btn btn-secondary" onclick="submitScore('tetris')">Submit Tetris</button>
       </div>
       <div class="lb-msg" id="lbMsg"></div>
     </div>
@@ -188,6 +193,7 @@
       <button class="lb-tab active" data-game="snake" onclick="switchTab('snake')">Snake</button>
       <button class="lb-tab" data-game="rhythm" onclick="switchTab('rhythm')">Rhythm Game</button>
       <button class="lb-tab" data-game="typing" onclick="switchTab('typing')">Typing Test</button>
+      <button class="lb-tab" data-game="tetris" onclick="switchTab('tetris')">Tetris</button>
     </div>
 
     <div class="lb-table-wrap">
@@ -237,6 +243,10 @@
   if (rb) document.getElementById('rhythmBest').textContent = rb;
   if (sb) document.getElementById('snakeBest').textContent = sb;
   if (tb) document.getElementById('typingBest').textContent = tb+' WPM';
+  const tetB = localStorage.getItem('ep_tetris_best');
+  if (tetB) document.getElementById('tetrisBest').textContent = tetB;
+  const tetStats = JSON.parse(localStorage.getItem('ep_tetris_stats') || '{}');
+  if (tetStats.totalLines) document.getElementById('tetrisLines').textContent = tetStats.totalLines;
 
   (function loadActivity() {
     const log = JSON.parse(localStorage.getItem('ep_activity')||'[]');
@@ -253,13 +263,14 @@
   })();
 
   // Leaderboard
-  let leaderboardData = { snake: [], rhythm: [], typing: [] };
+  let leaderboardData = { snake: [], rhythm: [], typing: [], tetris: [] };
   let currentTab = 'snake';
 
   function loadLocalScores() {
     document.getElementById('localSnake').textContent = localStorage.getItem('ep_snake_best') || '--';
     document.getElementById('localRhythm').textContent = localStorage.getItem('ep_rhythm_best') || '--';
     document.getElementById('localTyping').textContent = localStorage.getItem('ep_typing_best') || '--';
+    document.getElementById('localTetris').textContent = localStorage.getItem('ep_tetris_best') || '--';
   }
 
   async function loadLeaderboard() {
@@ -268,7 +279,7 @@
       if (!res.ok) throw new Error('API error');
       leaderboardData = await res.json();
     } catch (e) {
-      leaderboardData = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[]}');
+      leaderboardData = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[],"tetris":[]}');
     }
     renderLbTable();
   }
@@ -304,7 +315,7 @@
   async function submitScore(game) {
     const name = document.getElementById('lbName').value.trim();
     if (!name) { showLbMsg('Enter your name first!', 'error'); return; }
-    const scoreKeys = { snake: 'ep_snake_best', rhythm: 'ep_rhythm_best', typing: 'ep_typing_best' };
+    const scoreKeys = { snake: 'ep_snake_best', rhythm: 'ep_rhythm_best', typing: 'ep_typing_best', tetris: 'ep_tetris_best' };
     const score = parseInt(localStorage.getItem(scoreKeys[game]) || '0');
     if (!score) { showLbMsg('No ' + game + ' score found. Play the game first!', 'error'); return; }
     try {
@@ -318,7 +329,7 @@
       await loadLeaderboard();
       switchTab(game);
     } catch (e) {
-      const data = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[]}');
+      const data = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[],"tetris":[]}');
       data[game].push({ name, score, time: new Date().toISOString() });
       data[game].sort((a, b) => b.score - a.score);
       if (data[game].length > 50) data[game] = data[game].slice(0, 50);
