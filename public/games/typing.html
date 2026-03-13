@@ -208,6 +208,8 @@
   ];
 
   let text, pos, started, timer, startTime, correct, incorrect, totalTyped;
+  // Track correctness of each committed character (before pos)
+  let committedCorrectness = [];
 
   function generateText() {
     const words = [];
@@ -224,6 +226,7 @@
     correct = 0;
     incorrect = 0;
     totalTyped = 0;
+    committedCorrectness = [];
     clearInterval(timer);
     document.getElementById('input').value = '';
     document.getElementById('input').disabled = false;
@@ -237,19 +240,24 @@
     const bestWpm = localStorage.getItem('ep_typing_best');
     document.getElementById('bestWpm').textContent = bestWpm || '--';
 
-    renderText();
+    renderText('');
   }
 
-  function renderText() {
+  function renderText(currentInput) {
     const display = document.getElementById('textDisplay');
     let html = '';
     for (let i = 0; i < text.length; i++) {
       const ch = text[i] === ' ' ? '&nbsp;' : escHtml(text[i]);
       if (i < pos) {
-        const typed = document.getElementById('input').value;
-        // We track correctness in input handler
-        html += '<span class="correct">' + ch + '</span>';
-      } else if (i === pos) {
+        // Committed characters — use stored correctness
+        const cls = committedCorrectness[i] ? 'correct' : 'incorrect';
+        html += '<span class="' + cls + '">' + ch + '</span>';
+      } else if (i < pos + currentInput.length) {
+        // Currently being typed — compare in real time
+        const typedChar = currentInput[i - pos];
+        const cls = typedChar === text[i] ? 'correct' : 'incorrect';
+        html += '<span class="' + cls + '">' + ch + '</span>';
+      } else if (i === pos + currentInput.length) {
         html += '<span class="current pending">' + ch + '</span>';
       } else {
         html += '<span class="pending">' + ch + '</span>';
@@ -266,28 +274,82 @@
     }
 
     const val = this.value;
-    const expected = text.slice(0, pos + val.length);
 
-    // Check last character
-    if (val.length > 0) {
-      const lastIdx = val.length - 1;
-      const expectedChar = text[pos + lastIdx];
-      totalTyped++;
-      if (val[lastIdx] === expectedChar) {
-        correct++;
-      } else {
-        incorrect++;
+    // If space was typed, commit the current word and advance
+    if (val.endsWith(' ')) {
+      // Record correctness for each character in this word segment
+      const segment = val.slice(0, -1); // exclude the trailing space
+      for (let i = 0; i < segment.length; i++) {
+        const textIdx = pos + i;
+        if (textIdx < text.length) {
+          const isCorrect = segment[i] === text[textIdx];
+          committedCorrectness[textIdx] = isCorrect;
+        }
+      }
+      // Also commit the space character itself
+      const spaceIdx = pos + segment.length;
+      if (spaceIdx < text.length) {
+        committedCorrectness[spaceIdx] = text[spaceIdx] === ' ';
+      }
+
+      // Count stats for newly typed chars
+      // We need to track what was already counted, so use a simpler approach:
+      // Recount all from committed
+      correct = 0;
+      incorrect = 0;
+      totalTyped = 0;
+      const commitLen = segment.length + 1; // +1 for space
+      pos += commitLen;
+      for (let i = 0; i < pos; i++) {
+        if (i < text.length) {
+          totalTyped++;
+          if (committedCorrectness[i]) correct++;
+          else incorrect++;
+        }
+      }
+
+      this.value = '';
+      renderText('');
+      updateStats();
+      return;
+    }
+
+    // Recount stats: committed chars + current input chars
+    correct = 0;
+    incorrect = 0;
+    totalTyped = 0;
+    for (let i = 0; i < pos; i++) {
+      if (i < text.length) {
+        totalTyped++;
+        if (committedCorrectness[i]) correct++;
+        else incorrect++;
+      }
+    }
+    for (let i = 0; i < val.length; i++) {
+      const textIdx = pos + i;
+      if (textIdx < text.length) {
+        totalTyped++;
+        if (val[i] === text[textIdx]) correct++;
+        else incorrect++;
       }
     }
 
-    // Check for space or completion of current segment
-    if (val.endsWith(' ') || pos + val.length >= text.length) {
-      // Move position forward
+    // Check if we've reached the end of the text
+    if (pos + val.length >= text.length) {
+      for (let i = 0; i < val.length; i++) {
+        const textIdx = pos + i;
+        if (textIdx < text.length) {
+          committedCorrectness[textIdx] = val[i] === text[textIdx];
+        }
+      }
       pos += val.length;
       this.value = '';
-      renderText();
+      renderText('');
+      updateStats();
+      return;
     }
 
+    renderText(val);
     updateStats();
   });
 
