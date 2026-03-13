@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
       const { password, id, authorToken } = req.body;
 
       // Clear all entries (owner only)
-      if (!id && password === 'evan') {
+      if (!id && password === 'paulina') {
         await saveEntries([]);
         return res.status(200).json({ ok: true });
       }
@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
         const entry = entries.find(e => e.id === id);
         if (!entry) return res.status(404).json({ error: 'Entry not found' });
 
-        const isOwner = password === 'evan';
+        const isOwner = password === 'paulina';
         const isAuthor = authorToken && entry.authorToken === authorToken;
         if (!isOwner && !isAuthor) {
           return res.status(403).json({ error: 'Not authorized to delete this entry' });
