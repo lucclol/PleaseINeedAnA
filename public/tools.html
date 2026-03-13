@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -233,6 +233,46 @@
     white-space: pre-wrap;
   }
 
+  .journal-entry-img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--radius-sm);
+    margin-top: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .journal-img-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-right: 8px;
+  }
+
+  .journal-img-label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .journal-img-preview {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .journal-img-preview img {
+    max-width: 150px;
+    max-height: 100px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
   .tools-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -251,12 +291,12 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
-      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
       <span>Evan's Playhouse</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
-      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
       <li><a href="/dashboard.html">Dashboard</a></li>
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html">About</a></li>
@@ -298,7 +338,14 @@
       <h3>Journal</h3>
       <div class="journal-container">
         <textarea class="journal-textarea" id="journalInput" placeholder="Write whatever's on your mind..."></textarea>
-        <button class="btn btn-primary" onclick="addJournalEntry()">Save Entry</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <label class="journal-img-label">
+            Attach image
+            <input type="file" id="journalImgInput" accept="image/*" style="display:none" onchange="previewJournalImg(this)">
+          </label>
+          <button class="btn btn-primary" onclick="addJournalEntry()">Save Entry</button>
+        </div>
+        <div class="journal-img-preview" id="journalImgPreview"></div>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
     </div>
@@ -317,7 +364,7 @@
   </div>
 </main>
 
-<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
 
 <footer class="footer">Evan's Playhouse</footer>
 
@@ -375,6 +422,40 @@
 
   // =========== JOURNAL ===========
   let journalEntries = JSON.parse(localStorage.getItem('ep_journal') || '[]');
+  let journalPendingImg = null;
+
+  function previewJournalImg(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 500000) {
+      // Resize large images to keep localStorage manageable
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 600;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        journalPendingImg = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('journalImgPreview').innerHTML = '<img src="' + journalPendingImg + '"> <button class="journal-entry-delete" onclick="clearJournalImg()">x</button>';
+      };
+      img.src = URL.createObjectURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        journalPendingImg = e.target.result;
+        document.getElementById('journalImgPreview').innerHTML = '<img src="' + journalPendingImg + '"> <button class="journal-entry-delete" onclick="clearJournalImg()">x</button>';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearJournalImg() {
+    journalPendingImg = null;
+    document.getElementById('journalImgPreview').innerHTML = '';
+    document.getElementById('journalImgInput').value = '';
+  }
 
   function renderJournal() {
     const container = document.getElementById('journalEntries');
@@ -389,8 +470,12 @@
       div.className = 'journal-entry';
       const date = new Date(entry.time);
       const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      div.innerHTML = '<div class="journal-entry-header"><span class="journal-entry-date">' + dateStr + '</span><button class="journal-entry-delete" onclick="deleteJournalEntry(' + i + ')">x</button></div>'
+      let html = '<div class="journal-entry-header"><span class="journal-entry-date">' + dateStr + '</span><button class="journal-entry-delete" onclick="deleteJournalEntry(' + i + ')">x</button></div>'
         + '<div class="journal-entry-text">' + escHtml(entry.text) + '</div>';
+      if (entry.img) {
+        html += '<img class="journal-entry-img" src="' + entry.img + '" alt="Journal image">';
+      }
+      div.innerHTML = html;
       container.appendChild(div);
     });
   }
@@ -398,10 +483,19 @@
   function addJournalEntry() {
     const input = document.getElementById('journalInput');
     const text = input.value.trim();
-    if (!text) return;
-    journalEntries.push({ text, time: new Date().toISOString() });
-    localStorage.setItem('ep_journal', JSON.stringify(journalEntries));
+    if (!text && !journalPendingImg) return;
+    const entry = { text: text || '', time: new Date().toISOString() };
+    if (journalPendingImg) entry.img = journalPendingImg;
+    journalEntries.push(entry);
+    try {
+      localStorage.setItem('ep_journal', JSON.stringify(journalEntries));
+    } catch(e) {
+      alert('Storage full! Try removing old entries or using smaller images.');
+      journalEntries.pop();
+      return;
+    }
     input.value = '';
+    clearJournalImg();
     renderJournal();
     logActivity('Wrote a journal entry');
   }
@@ -475,6 +569,19 @@
     if (log.length > 50) log.splice(0, log.length - 50);
     localStorage.setItem('ep_activity', JSON.stringify(log));
   }
+</script>
+
+<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
+<div class="settings-panel">
+  <h4>Settings</h4>
+  <div class="theme-toggle">
+    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
+    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
+  </div>
+</div>
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'');localStorage.setItem('ep_theme',t);document.getElementById('themeLight').classList.toggle('active',t==='light');document.getElementById('themeDark').classList.toggle('active',t==='dark');}
+(function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
 </script>
 
 </body>

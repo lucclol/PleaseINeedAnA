@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -23,13 +23,6 @@
     min-height: calc(100vh - 60px);
     text-align: center;
     padding: 40px 24px;
-  }
-
-  .hero-gif {
-    width: clamp(120px, 20vw, 200px);
-    height: auto;
-    border-radius: var(--radius);
-    margin-bottom: 24px;
   }
 
   .hero h1 {
@@ -53,33 +46,13 @@
     justify-content: center;
   }
 
-  .quick-links {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px 80px;
-  }
-
-  .quick-links h2 {
-    font-size: 24px;
-    margin-bottom: 24px;
-    text-align: center;
-  }
-
-  .divider {
-    width: 60px;
-    height: 2px;
-    background: var(--accent);
-    opacity: 0.4;
-    margin: 0 auto 60px;
-  }
-
   /* ============================
-     Music Visualizer Lounge
+     Sound Lounge
      ============================ */
   .visualizer-lounge {
     position: relative;
     overflow: hidden;
-    min-height: 420px;
+    min-height: 520px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -101,7 +74,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(244,241,238,0.85) 0%, rgba(42,37,32,0.55) 50%, rgba(244,241,238,0.85) 100%);
+    background: linear-gradient(180deg, rgba(26,26,46,0.3) 0%, rgba(26,26,46,0.15) 50%, rgba(26,26,46,0.3) 100%);
   }
 
   @keyframes fadeInBg {
@@ -115,41 +88,46 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
+    max-width: 700px;
+    width: 100%;
   }
 
   .visualizer-lounge h2 {
     font-size: clamp(24px, 4vw, 36px);
-    color: var(--text-heading);
-    text-shadow: 0 1px 8px rgba(255,255,255,0.5);
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
   }
 
   .visualizer-lounge p {
-    color: var(--text-muted);
+    color: rgba(255,255,255,0.7);
     font-size: 15px;
     max-width: 400px;
-    text-shadow: 0 1px 4px rgba(255,255,255,0.4);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
 
   .visualizer-canvas-wrap {
-    background: rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.25);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: var(--radius);
     padding: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    width: 100%;
   }
 
   #visualizerCanvas {
     display: block;
     border-radius: var(--radius-sm);
-    width: min(600px, 80vw);
-    height: 160px;
+    width: 100%;
+    height: 120px;
   }
 
   .lounge-controls {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .lounge-btn {
@@ -161,7 +139,7 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
     cursor: pointer;
     transition: all var(--transition);
     background: rgba(124,141,181,0.85);
@@ -193,6 +171,79 @@
     background: var(--accent);
     cursor: pointer;
   }
+
+  /* Spotify / Music Input */
+  .lounge-input-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .lounge-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    backdrop-filter: blur(4px);
+  }
+
+  .lounge-input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .lounge-input:focus {
+    border-color: var(--accent);
+  }
+
+  .spotify-embed {
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .spotify-embed iframe {
+    width: 100%;
+    border-radius: var(--radius);
+    border: none;
+  }
+
+  .lounge-or {
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .lounge-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .lounge-file-label:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+
+  .lounge-now-playing {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-style: italic;
+  }
 </style>
 </head>
 <body>
@@ -200,12 +251,12 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
-      <img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="Logo">
+      <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
       <span>Evan's Playhouse</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
-      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773357603203-397429b5-5735-45d8-a9a0-c34c12fee80c.png" alt="Home"></a></li>
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
       <li><a href="/dashboard.html">Dashboard</a></li>
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html">About</a></li>
@@ -217,7 +268,6 @@
 </nav>
 
 <section class="hero">
-  <img src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif" alt="" class="hero-gif">
   <h1>Welcome</h1>
   <p>Made by Evan Cruz</p>
   <div class="hero-buttons">
@@ -231,11 +281,29 @@
   <div class="visualizer-lounge-bg"></div>
   <div class="visualizer-content">
     <h2>Sound Lounge</h2>
-    <p>Sit back, vibe out, and watch the music move.</p>
+    <p>Paste a Spotify link or upload your own track.</p>
+
+    <div class="lounge-input-row">
+      <input type="text" class="lounge-input" id="spotifyInput" placeholder="Paste a Spotify link (track, album, or playlist)..." onkeydown="if(event.key==='Enter')loadSpotify()">
+      <button class="lounge-btn" onclick="loadSpotify()">Load</button>
+    </div>
+
+    <div class="spotify-embed" id="spotifyEmbed" style="display:none;"></div>
+
+    <div class="lounge-or">or play your own file</div>
+
+    <label class="lounge-file-label">
+      Choose audio file
+      <input type="file" id="audioFileInput" accept="audio/*" style="display:none" onchange="loadAudioFile(this)">
+    </label>
+
+    <div class="lounge-now-playing" id="nowPlaying" style="display:none;"></div>
+
     <div class="visualizer-canvas-wrap">
       <canvas id="visualizerCanvas"></canvas>
     </div>
-    <div class="lounge-controls">
+
+    <div class="lounge-controls" id="audioControls" style="display:none;">
       <button class="lounge-btn" id="loungePlayBtn">&#9654; Play</button>
       <input type="range" class="volume-slider" id="loungeVolume" min="0" max="1" step="0.01" value="0.5">
     </div>
@@ -248,17 +316,68 @@
   const ctx = canvas.getContext('2d');
   const playBtn = document.getElementById('loungePlayBtn');
   const volumeSlider = document.getElementById('loungeVolume');
+  const audioControls = document.getElementById('audioControls');
+  const nowPlayingEl = document.getElementById('nowPlaying');
 
   let audioCtx, analyser, source, gainNode;
   let audio = null;
   let playing = false;
   let animId = null;
+  let hasAudioFile = false;
 
-  function initAudio() {
-    audio = new Audio('/music.mp3');
-    audio.crossOrigin = 'anonymous';
+  // Spotify embed
+  window.loadSpotify = function() {
+    const input = document.getElementById('spotifyInput').value.trim();
+    if (!input) return;
+
+    // Parse Spotify URL: open.spotify.com/track/ID, open.spotify.com/album/ID, etc.
+    let embedUrl = '';
+    const match = input.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/);
+    if (match) {
+      embedUrl = 'https://open.spotify.com/embed/' + match[1] + '/' + match[2] + '?utm_source=generator&theme=0';
+    } else if (input.match(/spotify:(track|album|playlist|episode|show):([a-zA-Z0-9]+)/)) {
+      const m = input.match(/spotify:(track|album|playlist|episode|show):([a-zA-Z0-9]+)/);
+      embedUrl = 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] + '?utm_source=generator&theme=0';
+    }
+
+    if (!embedUrl) {
+      alert('Paste a valid Spotify link (e.g. https://open.spotify.com/track/...)');
+      return;
+    }
+
+    const embedDiv = document.getElementById('spotifyEmbed');
+    embedDiv.innerHTML = '<iframe src="' + embedUrl + '" height="152" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
+    embedDiv.style.display = 'block';
+
+    // Hide audio file controls when using Spotify
+    audioControls.style.display = 'none';
+    if (audio) { audio.pause(); playing = false; }
+    nowPlayingEl.style.display = 'none';
+  };
+
+  // Audio file upload
+  window.loadAudioFile = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Hide Spotify embed
+    document.getElementById('spotifyEmbed').style.display = 'none';
+    document.getElementById('spotifyEmbed').innerHTML = '';
+
+    if (audio) {
+      audio.pause();
+      playing = false;
+    }
+
+    audio = new Audio(URL.createObjectURL(file));
     audio.loop = true;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (source) {
+      try { source.disconnect(); } catch(e) {}
+    }
     source = audioCtx.createMediaElementSource(audio);
     analyser = audioCtx.createAnalyser();
     gainNode = audioCtx.createGain();
@@ -267,7 +386,13 @@
     gainNode.connect(analyser);
     analyser.connect(audioCtx.destination);
     gainNode.gain.value = parseFloat(volumeSlider.value);
-  }
+    hasAudioFile = true;
+
+    audioControls.style.display = 'flex';
+    nowPlayingEl.textContent = 'Now playing: ' + file.name;
+    nowPlayingEl.style.display = 'block';
+    playBtn.innerHTML = '&#9654; Play';
+  };
 
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
@@ -296,11 +421,10 @@
 
       const gradient = ctx.createLinearGradient(x, h, x, h - barH);
       gradient.addColorStop(0, 'rgba(124,141,181,0.9)');
-      gradient.addColorStop(1, 'rgba(124,141,181,0.2)');
+      gradient.addColorStop(1, 'rgba(142,158,197,0.3)');
       ctx.fillStyle = gradient;
       ctx.fillRect(x + gap / 2, h - barH, barW - gap, barH);
 
-      // reflection
       ctx.fillStyle = 'rgba(124,141,181,0.08)';
       ctx.fillRect(x + gap / 2, h, barW - gap, barH * 0.3);
     }
@@ -308,7 +432,6 @@
     animId = requestAnimationFrame(draw);
   }
 
-  // idle animation when not playing
   function drawIdle() {
     const w = canvas.getBoundingClientRect().width;
     const h = canvas.getBoundingClientRect().height;
@@ -320,15 +443,15 @@
       const val = 0.08 + 0.06 * Math.sin(t * 1.5 + i * 0.3);
       const barH = val * h;
       const x = i * barW;
-      ctx.fillStyle = 'rgba(124,141,181,0.18)';
+      ctx.fillStyle = 'rgba(124,141,181,0.25)';
       ctx.fillRect(x + 1, h - barH, barW - 2, barH);
     }
     if (!playing) animId = requestAnimationFrame(drawIdle);
   }
 
   playBtn.addEventListener('click', function() {
-    if (!audio) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!audio) return;
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
     if (playing) {
       audio.pause();
@@ -355,51 +478,30 @@
 })();
 </script>
 
-<div class="divider"></div>
+<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
 
-<section class="quick-links">
-  <h2>What's Here</h2>
-  <div class="card-grid">
-    <a href="/games.html" class="card">
-      <div class="card-icon">//</div>
-      <h3>Games</h3>
-      <p>Rhythm game, snake, tic-tac-toe, sudoku, and a typing test. More coming.</p>
-      <span class="card-tag">Play</span>
-    </a>
-    <a href="/dashboard.html" class="card">
-      <div class="card-icon">#</div>
-      <h3>Dashboard</h3>
-      <p>See your high scores, track visits, and check what's new around the site.</p>
-      <span class="card-tag">Stats</span>
-    </a>
-    <a href="/tools.html" class="card">
-      <div class="card-icon">%</div>
-      <h3>Tools</h3>
-      <p>To-do list, pomodoro timer, journal, and other useful stuff.</p>
-      <span class="card-tag">Utility</span>
-    </a>
-    <a href="/media-tools.html" class="card">
-      <div class="card-icon">~</div>
-      <h3>Media Tools</h3>
-      <p>Image trimmer, background remover, video trimmer, MP3 cutter, and more.</p>
-      <span class="card-tag">Media</span>
-    </a>
-    <a href="/guestbook.html" class="card">
-      <div class="card-icon">&amp;</div>
-      <h3>Guestbook</h3>
-      <p>Drop a message. Say hey. Leave your mark.</p>
-      <span class="card-tag">Social</span>
-    </a>
-    <a href="/about.html" class="card">
-      <div class="card-icon">@</div>
-      <h3>About Me</h3>
-      <p>Who's Evan? Find out here.</p>
-      <span class="card-tag">Info</span>
-    </a>
+<!-- Settings -->
+<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
+<div class="settings-panel">
+  <h4>Settings</h4>
+  <div class="theme-toggle">
+    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
+    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
   </div>
-</section>
+</div>
 
-<img src="https://image2url.com/r2/default/images/1773357779092-7021136d-cc9b-4c39-86c4-0bd0e1f2d877.png" alt="" class="floating-logo">
+<script>
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+  localStorage.setItem('ep_theme', t);
+  document.getElementById('themeLight').classList.toggle('active', t === 'light');
+  document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+}
+(function() {
+  var saved = localStorage.getItem('ep_theme');
+  if (saved === 'dark') setTheme('dark');
+})();
+</script>
 
 <footer class="footer">
   Evan's Playhouse
