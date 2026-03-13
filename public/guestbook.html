@@ -152,6 +152,24 @@
     margin-top: 24px;
     text-align: center;
   }
+
+  .gb-delete-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+  }
+
+  .gb-delete-btn:hover {
+    border-color: #c0392b;
+    color: #c0392b;
+    background: rgba(192, 57, 43, 0.08);
+  }
 </style>
 </head>
 <body>
@@ -205,7 +223,8 @@
     <div class="gb-empty">No entries yet. Be the first to sign!</div>
   </div>
 
-  <div class="gb-clear">
+  <div class="gb-clear" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-secondary" onclick="loginAsOwner()">Owner Login</button>
     <button class="btn btn-secondary" onclick="clearGuestbook()">Clear All (Owner Only)</button>
   </div>
 </main>
@@ -220,6 +239,17 @@
   let gbPendingAudio = null;
   let gbPendingAudioName = null;
   let useAPI = true;
+  let isOwner = false;
+
+  // Generate or retrieve a unique author token for this browser
+  function getAuthorToken() {
+    let token = localStorage.getItem('ep_gb_author');
+    if (!token) {
+      token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('ep_gb_author', token);
+    }
+    return token;
+  }
 
   function previewGbImg(input) {
     const file = input.files[0];
@@ -294,12 +324,15 @@
       return;
     }
     container.innerHTML = '';
+    const myToken = getAuthorToken();
     entries.slice().reverse().forEach(e => {
       const div = document.createElement('div');
       div.className = 'gb-entry';
       const date = new Date(e.time);
       const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      let html = '<div class="gb-entry-header"><span class="gb-entry-name">' + escHtml(e.name) + '</span><span class="gb-entry-date">' + dateStr + '</span></div>'
+      const canDelete = isOwner || (e.authorToken && e.authorToken === myToken);
+      const deleteBtn = canDelete ? '<button class="gb-delete-btn" onclick="deleteEntry(' + e.id + ')">' + (isOwner && e.authorToken !== myToken ? 'Remove' : 'Delete') + '</button>' : '';
+      let html = '<div class="gb-entry-header"><span class="gb-entry-name">' + escHtml(e.name) + '</span><span class="gb-entry-date">' + dateStr + deleteBtn + '</span></div>'
         + '<div class="gb-entry-msg">' + escHtml(e.msg) + '</div>';
       if (e.img) {
         html += '<img class="gb-entry-img" src="' + e.img + '" alt="Attached image">';
@@ -316,7 +349,7 @@
     const name = document.getElementById('gbName').value.trim() || 'Anonymous';
     const msg = document.getElementById('gbMsg').value.trim();
     if (!msg && !gbPendingImg && !gbPendingAudio) return;
-    const entry = { name, msg: msg || '' };
+    const entry = { name, msg: msg || '', authorToken: getAuthorToken() };
     if (gbPendingImg) entry.img = gbPendingImg;
     if (gbPendingAudio) entry.audio = gbPendingAudio;
 
@@ -358,9 +391,34 @@
     return d.innerHTML;
   }
 
+  async function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    if (useAPI) {
+      try {
+        const body = { id, authorToken: getAuthorToken() };
+        if (isOwner) body.password = 'evan';
+        const res = await fetch('/api/guestbook', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          alert(data.error || 'Could not delete');
+          return;
+        }
+      } catch (e) {}
+    } else {
+      entries = entries.filter(e => e.id !== id);
+      try { localStorage.setItem('ep_guestbook', JSON.stringify(entries)); } catch(e) {}
+    }
+    await loadEntries();
+  }
+
   async function clearGuestbook() {
     const pw = prompt('Enter the owner password to clear all entries:');
     if (pw === 'evan') {
+      isOwner = true;
       if (useAPI) {
         try {
           await fetch('/api/guestbook', {
@@ -372,6 +430,16 @@
       }
       localStorage.removeItem('ep_guestbook');
       entries = [];
+      renderEntries();
+    } else if (pw !== null) {
+      alert('Wrong password.');
+    }
+  }
+
+  function loginAsOwner() {
+    const pw = prompt('Enter owner password:');
+    if (pw === 'evan') {
+      isOwner = true;
       renderEntries();
     } else if (pw !== null) {
       alert('Wrong password.');
