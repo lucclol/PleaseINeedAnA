@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
-<title>Guestbook - Evan's Playhouse</title>
+<title>Guestbook - Evan's Lounge</title>
 <script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
@@ -179,7 +179,7 @@
   <div class="nav-inner">
     <a href="/" class="nav-logo">
       <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
-      <span>Evan's Playhouse</span>
+      <span>Evan's Lounge</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
@@ -189,7 +189,6 @@
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html">Lounge</a></li>
-      <li><a href="/leaderboard.html">Leaderboard</a></li>
       <li><a href="/guestbook.html" class="active">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
@@ -232,7 +231,7 @@
 
 <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
 
-<footer class="footer">Evan's Playhouse</footer>
+<footer class="footer">Evan's Lounge</footer>
 
 <script>
   let entries = [];
@@ -465,5 +464,6 @@ function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dar
 (function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
 </script>
 
+<script src="/js/mini-player.js"></script>
 </body>
 </html>

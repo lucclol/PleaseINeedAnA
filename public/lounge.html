@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sound Lounge - Evan's Playhouse</title>
+<title>Sound Lounge - Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
 <link rel="stylesheet" href="css/style.css">
@@ -329,7 +329,7 @@
   <div class="nav-inner">
     <a href="/" class="nav-logo">
       <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
-      <span>Evan's Playhouse</span>
+      <span>Evan's Lounge</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
@@ -339,7 +339,6 @@
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html" class="active">Lounge</a></li>
-      <li><a href="/leaderboard.html">Leaderboard</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
@@ -425,6 +424,37 @@
   let queue = []; // [{type:'yt'|'sp'|'file', id, label, embedHtml, blobUrl?}]
   let currentIndex = -1;
 
+  let ytPlayer = null;
+  let ytApiReady = false;
+
+  // Load YouTube IFrame API
+  (function() {
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  })();
+  window.onYouTubeIframeAPIReady = function() { ytApiReady = true; };
+
+  function createYTPlayer(videoId) {
+    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+    var embedDiv = document.getElementById('musicEmbed');
+    embedDiv.innerHTML = '<div id="ytPlayerDiv"></div>';
+    embedDiv.style.display = 'block';
+    ytPlayer = new YT.Player('ytPlayerDiv', {
+      height: '200',
+      width: '100%',
+      videoId: videoId,
+      playerVars: { autoplay: 1 },
+      events: {
+        onStateChange: function(event) {
+          if (event.data === YT.PlayerState.ENDED) {
+            playNext();
+          }
+        }
+      }
+    });
+  }
+
   // Parse a link into a queue item, returns null if invalid
   function parseLink(input) {
     // YouTube
@@ -433,8 +463,7 @@
       return {
         type: 'yt',
         id: ytMatch[1],
-        label: 'YouTube: ' + ytMatch[1],
-        embedHtml: '<iframe src="https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1&enablejsapi=1" height="200" allow="autoplay; encrypted-media" allowfullscreen style="width:100%;border:none;border-radius:var(--radius);"></iframe>'
+        label: 'YouTube: ' + ytMatch[1]
       };
     }
     // Spotify
@@ -443,8 +472,8 @@
       return {
         type: 'sp',
         id: spMatch[2],
-        label: 'Spotify: ' + spMatch[1] + '/' + spMatch[2],
-        embedHtml: '<iframe src="https://open.spotify.com/embed/' + spMatch[1] + '/' + spMatch[2] + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="width:100%;border:none;border-radius:var(--radius);"></iframe>'
+        spType: spMatch[1],
+        label: 'Spotify: ' + spMatch[1] + '/' + spMatch[2]
       };
     }
     // Spotify URI
@@ -453,8 +482,8 @@
       return {
         type: 'sp',
         id: spUri[2],
-        label: 'Spotify: ' + spUri[1] + '/' + spUri[2],
-        embedHtml: '<iframe src="https://open.spotify.com/embed/' + spUri[1] + '/' + spUri[2] + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="width:100%;border:none;border-radius:var(--radius);"></iframe>'
+        spType: spUri[1],
+        label: 'Spotify: ' + spUri[1] + '/' + spUri[2]
       };
     }
     return null;
@@ -501,10 +530,30 @@
       playBtn.innerHTML = '&#9646;&#9646; Pause';
       cancelAnimationFrame(animId);
       draw();
+    } else if (item.type === 'yt') {
+      // YouTube - use IFrame API for auto-advance
+      embedPlaying = false;
+      if (ytApiReady) {
+        createYTPlayer(item.id);
+      } else {
+        // Fallback: wait for API
+        var waitYT = setInterval(function() {
+          if (ytApiReady) { clearInterval(waitYT); createYTPlayer(item.id); }
+        }, 200);
+      }
+      audioControls.style.display = 'flex';
+      nowPlayingEl.textContent = 'Now playing: ' + item.label;
+      nowPlayingEl.style.display = 'block';
+      embedPlaying = true;
+      cancelAnimationFrame(animId);
+      drawSimulated();
+      playBtn.innerHTML = '&#9646;&#9646; Pause';
+      playing = true;
     } else {
-      // Embed (YT/Spotify)
+      // Spotify embed
       const embedDiv = document.getElementById('musicEmbed');
-      embedDiv.innerHTML = item.embedHtml;
+      var spType = item.spType || 'track';
+      embedDiv.innerHTML = '<iframe src="https://open.spotify.com/embed/' + spType + '/' + item.id + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="width:100%;border:none;border-radius:var(--radius);"></iframe>';
       embedDiv.style.display = 'block';
       audioControls.style.display = 'flex';
       nowPlayingEl.textContent = 'Now playing: ' + item.label;
@@ -678,7 +727,7 @@
   // Save queue to localStorage for persistence across pages
   function saveQueueState() {
     var saveable = queue.filter(function(q) { return q.type !== 'file'; }).map(function(q) {
-      return { type: q.type, id: q.id, label: q.label, embedHtml: q.embedHtml };
+      return { type: q.type, id: q.id, label: q.label, spType: q.spType };
     });
     var state = {
       queue: saveable,
@@ -794,15 +843,17 @@
         cancelAnimationFrame(animId); draw();
       }
     } else {
-      // For embeds, toggle the simulated visualizer
+      // For embeds, toggle
       if (embedPlaying) {
         embedPlaying = false; playing = false;
         playBtn.innerHTML = '&#9654; Play';
-        document.getElementById('musicEmbed').innerHTML = '';
-        document.getElementById('musicEmbed').style.display = 'none';
+        if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
         cancelAnimationFrame(animId); drawIdle();
       } else {
-        playSong(currentIndex);
+        embedPlaying = true; playing = true;
+        playBtn.innerHTML = '&#9646;&#9646; Pause';
+        if (ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+        cancelAnimationFrame(animId); drawSimulated();
       }
     }
   });
@@ -833,7 +884,8 @@ function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dar
 (function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
 </script>
 
-<footer class="footer">Evan's Playhouse</footer>
+<footer class="footer">Evan's Lounge</footer>
 
+<script src="/js/mini-player.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Evan's Playhouse</title>
+<title>Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
 <link rel="stylesheet" href="css/style.css">
@@ -19,7 +19,7 @@
   }
 
   .hero-img {
-    width: clamp(140px, 22vw, 220px);
+    width: clamp(200px, 30vw, 340px);
     height: auto;
     border-radius: var(--radius);
     margin-bottom: 28px;
@@ -55,7 +55,7 @@
   <div class="nav-inner">
     <a href="/" class="nav-logo">
       <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
-      <span>Evan's Playhouse</span>
+      <span>Evan's Lounge</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
@@ -65,7 +65,6 @@
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html">Lounge</a></li>
-      <li><a href="/leaderboard.html">Leaderboard</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
@@ -109,7 +108,7 @@ function setTheme(t) {
 </script>
 
 <footer class="footer">
-  Evan's Playhouse
+  Evan's Lounge
 </footer>
 
 <script>
@@ -121,5 +120,6 @@ function setTheme(t) {
 })();
 </script>
 
+<script src="/js/mini-player.js"></script>
 </body>
 </html>
