@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Lounge - Evan's Playhouse</title>
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    min-height: 100vh;
+  }
+
+  .lounge-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 100px 24px 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lounge-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .lounge-header h1 {
+    font-size: clamp(32px, 6vw, 48px);
+    color: #e4e4f0;
+    margin-bottom: 8px;
+  }
+
+  .lounge-header p {
+    color: rgba(255,255,255,0.5);
+    font-size: 15px;
+  }
+
+  .lounge-gif {
+    width: clamp(120px, 20vw, 180px);
+    height: auto;
+    border-radius: var(--radius);
+    margin-bottom: 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .lounge-card {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .lounge-input-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .lounge-input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .lounge-input::placeholder { color: rgba(255,255,255,0.35); }
+  .lounge-input:focus { border-color: #8e9ec5; }
+
+  .lounge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: rgba(124,141,181,0.8);
+    color: #fff;
+  }
+
+  .lounge-btn:hover {
+    background: rgba(106,125,168,0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124,141,181,0.4);
+  }
+
+  .spotify-embed {
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .spotify-embed iframe {
+    width: 100%;
+    border-radius: var(--radius);
+    border: none;
+  }
+
+  .lounge-divider {
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .lounge-divider::before,
+  .lounge-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .lounge-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .lounge-file-label:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .lounge-now-playing {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  #visualizerCanvas {
+    display: block;
+    border-radius: var(--radius-sm);
+    width: 100%;
+    height: 140px;
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+  }
+
+  .lounge-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+    outline: none;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #8e9ec5;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
+      <span>Evan's Playhouse</span>
+    </a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/games.html">Games</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/media-tools.html">Media Tools</a></li>
+      <li><a href="/lounge.html" class="active">Lounge</a></li>
+      <li><a href="/leaderboard.html">Leaderboard</a></li>
+      <li><a href="/guestbook.html">Guestbook</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="lounge-page">
+  <div class="lounge-header anim-fade-up">
+    <h1>Sound Lounge</h1>
+    <p>Vibe out. Play something.</p>
+  </div>
+
+  <img src="https://image2url.com/r2/default/gifs/1773362819589-99e2b5e5-80a9-4bfc-9dc8-50b56406b16b.gif" alt="" class="lounge-gif anim-scale-in anim-delay-2">
+
+  <div class="lounge-card anim-fade-up anim-delay-3">
+    <div class="lounge-input-row">
+      <input type="text" class="lounge-input" id="musicInput" placeholder="Paste a Spotify or YouTube link..." onkeydown="if(event.key==='Enter')loadMusic()">
+      <button class="lounge-btn" onclick="loadMusic()">Load</button>
+    </div>
+
+    <div class="spotify-embed" id="musicEmbed" style="display:none;"></div>
+
+    <div class="lounge-divider">or upload a file</div>
+
+    <label class="lounge-file-label">
+      Choose audio file
+      <input type="file" id="audioFileInput" accept="audio/*" style="display:none" onchange="loadAudioFile(this)">
+    </label>
+
+    <div class="lounge-now-playing" id="nowPlaying" style="display:none;"></div>
+
+    <canvas id="visualizerCanvas"></canvas>
+
+    <div class="lounge-controls" id="audioControls" style="display:none;">
+      <button class="lounge-btn" id="loungePlayBtn">&#9654; Play</button>
+      <input type="range" class="volume-slider" id="loungeVolume" min="0" max="1" step="0.01" value="0.5">
+    </div>
+  </div>
+</div>
+
+<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
+
+<script>
+(function() {
+  const canvas = document.getElementById('visualizerCanvas');
+  const ctx = canvas.getContext('2d');
+  const playBtn = document.getElementById('loungePlayBtn');
+  const volumeSlider = document.getElementById('loungeVolume');
+  const audioControls = document.getElementById('audioControls');
+  const nowPlayingEl = document.getElementById('nowPlaying');
+
+  let audioCtx, analyser, source, gainNode;
+  let audio = null;
+  let playing = false;
+  let animId = null;
+
+  window.loadMusic = function() {
+    const input = document.getElementById('musicInput').value.trim();
+    if (!input) return;
+    let embedHtml = '';
+
+    // YouTube
+    const ytMatch = input.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+      embedHtml = '<iframe src="https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1" height="200" allow="autoplay; encrypted-media" allowfullscreen style="width:100%;border:none;border-radius:var(--radius);"></iframe>';
+    }
+
+    // Spotify
+    if (!embedHtml) {
+      const spMatch = input.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/);
+      if (spMatch) {
+        embedHtml = '<iframe src="https://open.spotify.com/embed/' + spMatch[1] + '/' + spMatch[2] + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="width:100%;border:none;border-radius:var(--radius);"></iframe>';
+      }
+    }
+
+    // Spotify URI
+    if (!embedHtml) {
+      const spUri = input.match(/spotify:(track|album|playlist|episode|show):([a-zA-Z0-9]+)/);
+      if (spUri) {
+        embedHtml = '<iframe src="https://open.spotify.com/embed/' + spUri[1] + '/' + spUri[2] + '?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="width:100%;border:none;border-radius:var(--radius);"></iframe>';
+      }
+    }
+
+    if (!embedHtml) {
+      alert('Paste a valid Spotify or YouTube link');
+      return;
+    }
+
+    const embedDiv = document.getElementById('musicEmbed');
+    embedDiv.innerHTML = embedHtml;
+    embedDiv.style.display = 'block';
+    audioControls.style.display = 'none';
+    if (audio) { audio.pause(); playing = false; }
+    nowPlayingEl.style.display = 'none';
+  };
+
+  window.loadAudioFile = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('musicEmbed').style.display = 'none';
+    document.getElementById('musicEmbed').innerHTML = '';
+    if (audio) { audio.pause(); playing = false; }
+    audio = new Audio(URL.createObjectURL(file));
+    audio.loop = true;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (source) { try { source.disconnect(); } catch(e) {} }
+    source = audioCtx.createMediaElementSource(audio);
+    analyser = audioCtx.createAnalyser();
+    gainNode = audioCtx.createGain();
+    analyser.fftSize = 256;
+    source.connect(gainNode);
+    gainNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    gainNode.gain.value = parseFloat(volumeSlider.value);
+    audioControls.style.display = 'flex';
+    nowPlayingEl.textContent = 'Now playing: ' + file.name;
+    nowPlayingEl.style.display = 'block';
+    playBtn.innerHTML = '&#9654; Play';
+  };
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+
+  function draw() {
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    const bufLen = analyser.frequencyBinCount;
+    const data = new Uint8Array(bufLen);
+    analyser.getByteFrequencyData(data);
+    ctx.clearRect(0, 0, w, h);
+    const barCount = Math.min(bufLen, 64);
+    const barW = w / barCount;
+    for (let i = 0; i < barCount; i++) {
+      const val = data[i] / 255;
+      const barH = val * h * 0.9;
+      const x = i * barW;
+      const gradient = ctx.createLinearGradient(x, h, x, h - barH);
+      gradient.addColorStop(0, 'rgba(142,158,197,0.9)');
+      gradient.addColorStop(1, 'rgba(142,158,197,0.2)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x + 1, h - barH, barW - 2, barH);
+      ctx.fillStyle = 'rgba(142,158,197,0.06)';
+      ctx.fillRect(x + 1, h, barW - 2, barH * 0.3);
+    }
+    animId = requestAnimationFrame(draw);
+  }
+
+  function drawIdle() {
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0, 0, w, h);
+    const barCount = 64;
+    const barW = w / barCount;
+    const t = Date.now() / 1000;
+    for (let i = 0; i < barCount; i++) {
+      const val = 0.08 + 0.06 * Math.sin(t * 1.5 + i * 0.3);
+      const barH = val * h;
+      ctx.fillStyle = 'rgba(142,158,197,0.2)';
+      ctx.fillRect(i * barW + 1, h - barH, barW - 2, barH);
+    }
+    if (!playing) animId = requestAnimationFrame(drawIdle);
+  }
+
+  playBtn.addEventListener('click', function() {
+    if (!audio) return;
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (playing) {
+      audio.pause(); playing = false;
+      playBtn.innerHTML = '&#9654; Play';
+      cancelAnimationFrame(animId); drawIdle();
+    } else {
+      audio.play(); playing = true;
+      playBtn.innerHTML = '&#9646;&#9646; Pause';
+      cancelAnimationFrame(animId); draw();
+    }
+  });
+
+  volumeSlider.addEventListener('input', function() {
+    if (gainNode) gainNode.gain.value = parseFloat(this.value);
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  drawIdle();
+})();
+</script>
+
+<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
+<div class="settings-panel">
+  <h4>Settings</h4>
+  <div class="theme-toggle">
+    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
+    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
+  </div>
+</div>
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'');localStorage.setItem('ep_theme',t);document.getElementById('themeLight').classList.toggle('active',t==='light');document.getElementById('themeDark').classList.toggle('active',t==='dark');}
+(function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
+</script>
+
+<footer class="footer" style="color:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.08);">Evan's Playhouse</footer>
+
+</body>
+</html>
