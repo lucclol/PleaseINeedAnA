@@ -64,6 +64,38 @@
   .quick-nav { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
   .quick-nav a { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center; font-size: 13px; font-weight: 500; color: var(--text); transition: all var(--transition); }
   .quick-nav a:hover { border-color: var(--accent); color: var(--accent); }
+
+  .lb-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .lb-tab { padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition); }
+  .lb-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .lb-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .lb-table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .lb-table { width: 100%; border-collapse: collapse; }
+  .lb-table th { text-align: left; padding: 14px 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+  .lb-table td { padding: 14px 20px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); }
+  .lb-table tr:last-child td { border-bottom: none; }
+  .lb-table tr:hover td { background: var(--bg-card-hover); }
+  .lb-rank { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text-heading); width: 60px; }
+  .lb-rank-1 { color: #f0c040; }
+  .lb-rank-2 { color: #b0b0b0; }
+  .lb-rank-3 { color: #cd7f32; }
+  .lb-name { font-weight: 600; color: var(--text-heading); }
+  .lb-score { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--accent); text-align: right; }
+  .lb-date { font-size: 12px; color: var(--text-muted); text-align: right; }
+  .lb-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 15px; }
+  .lb-submit { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+  .lb-submit h3 { font-size: 16px; margin-bottom: 12px; }
+  .lb-submit p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+  .lb-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .lb-form input { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-size: 14px; outline: none; flex: 1; min-width: 120px; }
+  .lb-form input:focus { border-color: var(--accent); }
+  .lb-form input::placeholder { color: var(--text-muted); }
+  .lb-local-scores { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .lb-local-score { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .lb-local-score strong { color: var(--text-heading); margin-left: 4px; }
+  .lb-msg { font-size: 13px; margin-top: 8px; min-height: 20px; }
+  .lb-msg.success { color: #27ae60; }
+  .lb-msg.error { color: #c0392b; }
 </style>
 </head>
 <body>
@@ -82,7 +114,6 @@
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html">Lounge</a></li>
-      <li><a href="/leaderboard.html">Leaderboard</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
@@ -99,7 +130,6 @@
       <a href="/games.html" class="btn btn-primary">Play Games</a>
       <a href="/tools.html" class="btn btn-secondary">Open Tools</a>
       <a href="/media-tools.html" class="btn btn-secondary">Media Tools</a>
-      <a href="/leaderboard.html" class="btn btn-secondary">Leaderboard</a>
       <a href="/guestbook.html" class="btn btn-secondary">Guestbook</a>
     </div>
   </div>
@@ -130,8 +160,50 @@
       <a href="/games/typing.html">Typing Test</a>
       <a href="/media-tools.html">Media Tools</a>
       <a href="/tools.html">Journal / Timer</a>
-      <a href="/leaderboard.html">Leaderboard</a>
       <a href="/guestbook.html">Guestbook</a>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;">
+    <h2 style="font-size:22px;margin-bottom:16px;">Leaderboard</h2>
+
+    <div class="lb-submit">
+      <h3>Submit Your Score</h3>
+      <div class="lb-local-scores">
+        <div class="lb-local-score">Snake Best: <strong id="localSnake">--</strong></div>
+        <div class="lb-local-score">Rhythm Best: <strong id="localRhythm">--</strong></div>
+        <div class="lb-local-score">Typing Best: <strong id="localTyping">--</strong> WPM</div>
+      </div>
+      <p>Enter your name and pick a game to submit your local high score.</p>
+      <div class="lb-form">
+        <input type="text" id="lbName" placeholder="Your name" maxlength="20">
+        <button class="btn btn-secondary" onclick="submitScore('snake')">Submit Snake</button>
+        <button class="btn btn-secondary" onclick="submitScore('rhythm')">Submit Rhythm</button>
+        <button class="btn btn-secondary" onclick="submitScore('typing')">Submit Typing</button>
+      </div>
+      <div class="lb-msg" id="lbMsg"></div>
+    </div>
+
+    <div class="lb-tabs">
+      <button class="lb-tab active" data-game="snake" onclick="switchTab('snake')">Snake</button>
+      <button class="lb-tab" data-game="rhythm" onclick="switchTab('rhythm')">Rhythm Game</button>
+      <button class="lb-tab" data-game="typing" onclick="switchTab('typing')">Typing Test</button>
+    </div>
+
+    <div class="lb-table-wrap">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th style="text-align:right">Score</th>
+            <th style="text-align:right">Date</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody">
+          <tr><td colspan="4" class="lb-empty">Loading...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </main>
@@ -179,10 +251,99 @@
       list.appendChild(li);
     });
   })();
+
+  // Leaderboard
+  let leaderboardData = { snake: [], rhythm: [], typing: [] };
+  let currentTab = 'snake';
+
+  function loadLocalScores() {
+    document.getElementById('localSnake').textContent = localStorage.getItem('ep_snake_best') || '--';
+    document.getElementById('localRhythm').textContent = localStorage.getItem('ep_rhythm_best') || '--';
+    document.getElementById('localTyping').textContent = localStorage.getItem('ep_typing_best') || '--';
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const res = await fetch('/api/leaderboard');
+      if (!res.ok) throw new Error('API error');
+      leaderboardData = await res.json();
+    } catch (e) {
+      leaderboardData = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[]}');
+    }
+    renderLbTable();
+  }
+
+  function renderLbTable() {
+    const body = document.getElementById('lbBody');
+    const data = leaderboardData[currentTab] || [];
+    if (data.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" class="lb-empty">No scores yet. Be the first to submit!</td></tr>';
+      return;
+    }
+    body.innerHTML = '';
+    data.forEach((entry, i) => {
+      const rank = i + 1;
+      const rankClass = rank <= 3 ? ' lb-rank-' + rank : '';
+      const dateStr = new Date(entry.time).toLocaleDateString();
+      const scoreLabel = currentTab === 'typing' ? entry.score + ' WPM' : entry.score;
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="lb-rank' + rankClass + '">#' + rank + '</td>'
+        + '<td class="lb-name">' + escLbHtml(entry.name) + '</td>'
+        + '<td class="lb-score">' + scoreLabel + '</td>'
+        + '<td class="lb-date">' + dateStr + '</td>';
+      body.appendChild(tr);
+    });
+  }
+
+  function switchTab(game) {
+    currentTab = game;
+    document.querySelectorAll('.lb-tab').forEach(t => t.classList.toggle('active', t.dataset.game === game));
+    renderLbTable();
+  }
+
+  async function submitScore(game) {
+    const name = document.getElementById('lbName').value.trim();
+    if (!name) { showLbMsg('Enter your name first!', 'error'); return; }
+    const scoreKeys = { snake: 'ep_snake_best', rhythm: 'ep_rhythm_best', typing: 'ep_typing_best' };
+    const score = parseInt(localStorage.getItem(scoreKeys[game]) || '0');
+    if (!score) { showLbMsg('No ' + game + ' score found. Play the game first!', 'error'); return; }
+    try {
+      const res = await fetch('/api/leaderboard', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game, name, score })
+      });
+      if (!res.ok) throw new Error('Submit failed');
+      const result = await res.json();
+      showLbMsg('Score submitted! You are ranked #' + result.rank, 'success');
+      await loadLeaderboard();
+      switchTab(game);
+    } catch (e) {
+      const data = JSON.parse(localStorage.getItem('ep_leaderboard') || '{"snake":[],"rhythm":[],"typing":[]}');
+      data[game].push({ name, score, time: new Date().toISOString() });
+      data[game].sort((a, b) => b.score - a.score);
+      if (data[game].length > 50) data[game] = data[game].slice(0, 50);
+      localStorage.setItem('ep_leaderboard', JSON.stringify(data));
+      leaderboardData = data;
+      const rank = data[game].findIndex(e => e.name === name && e.score === score) + 1;
+      showLbMsg('Score saved locally! Ranked #' + rank, 'success');
+      switchTab(game);
+    }
+  }
+
+  function showLbMsg(text, type) {
+    const el = document.getElementById('lbMsg');
+    el.textContent = text; el.className = 'lb-msg ' + type;
+    setTimeout(() => { el.textContent = ''; el.className = 'lb-msg'; }, 4000);
+  }
+
+  function escLbHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  loadLocalScores();
+  loadLeaderboard();
 </script>
 <script>
 (function(){
-  var els = document.querySelectorAll('.dash-panel,.dash-hero,.reveal');
+  var els = document.querySelectorAll('.dash-panel,.dash-hero,.reveal,.lb-submit,.lb-table-wrap,.lb-tabs');
   var delay = 0;
   els.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity 0.5s ease '+delay+'s, transform 0.5s ease '+delay+'s';delay+=0.1;});
   var obs = new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';obs.unobserve(e.target);}});},{threshold:0.1});
