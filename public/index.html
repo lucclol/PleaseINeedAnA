@@ -8,11 +8,11 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(160deg, var(--bg) 0%, #e8e3de 50%, #ddd8d3 100%);
     background-attachment: fixed;
-    background-repeat: no-repeat;
+  }
+  [data-theme="dark"] body {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   }
 
   .hero {
@@ -23,6 +23,15 @@
     min-height: calc(100vh - 60px);
     text-align: center;
     padding: 40px 24px;
+  }
+
+  .hero-img {
+    width: clamp(140px, 22vw, 220px);
+    height: auto;
+    border-radius: var(--radius);
+    margin-bottom: 28px;
+    box-shadow: 0 8px 32px var(--shadow);
+    border: 2px solid var(--border);
   }
 
   .hero h1 {
@@ -45,205 +54,6 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-
-  /* ============================
-     Sound Lounge
-     ============================ */
-  .visualizer-lounge {
-    position: relative;
-    overflow: hidden;
-    min-height: 520px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 24px;
-    text-align: center;
-  }
-
-  .visualizer-lounge-bg {
-    position: absolute;
-    inset: 0;
-    background: url('https://image2url.com/r2/default/gifs/1773362819589-99e2b5e5-80a9-4bfc-9dc8-50b56406b16b.gif') center/cover no-repeat;
-    opacity: 0;
-    animation: fadeInBg 2s ease forwards;
-    z-index: 0;
-  }
-
-  .visualizer-lounge-bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(26,26,46,0.3) 0%, rgba(26,26,46,0.15) 50%, rgba(26,26,46,0.3) 100%);
-  }
-
-  @keyframes fadeInBg {
-    to { opacity: 1; }
-  }
-
-  .visualizer-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    max-width: 700px;
-    width: 100%;
-  }
-
-  .visualizer-lounge h2 {
-    font-size: clamp(24px, 4vw, 36px);
-    color: #fff;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-  }
-
-  .visualizer-lounge p {
-    color: rgba(255,255,255,0.7);
-    font-size: 15px;
-    max-width: 400px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  }
-
-  .visualizer-canvas-wrap {
-    background: rgba(0,0,0,0.25);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: var(--radius);
-    padding: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    width: 100%;
-  }
-
-  #visualizerCanvas {
-    display: block;
-    border-radius: var(--radius-sm);
-    width: 100%;
-    height: 120px;
-  }
-
-  .lounge-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .lounge-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.2);
-    cursor: pointer;
-    transition: all var(--transition);
-    background: rgba(124,141,181,0.85);
-    color: #fff;
-    backdrop-filter: blur(4px);
-  }
-
-  .lounge-btn:hover {
-    background: rgba(106,125,168,0.95);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(124,141,181,0.4);
-  }
-
-  .volume-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.3);
-    outline: none;
-  }
-
-  .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-  }
-
-  /* Spotify / Music Input */
-  .lounge-input-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-    max-width: 500px;
-  }
-
-  .lounge-input {
-    flex: 1;
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.3);
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    backdrop-filter: blur(4px);
-  }
-
-  .lounge-input::placeholder {
-    color: rgba(255,255,255,0.4);
-  }
-
-  .lounge-input:focus {
-    border-color: var(--accent);
-  }
-
-  .spotify-embed {
-    width: 100%;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .spotify-embed iframe {
-    width: 100%;
-    border-radius: var(--radius);
-    border: none;
-  }
-
-  .lounge-or {
-    color: rgba(255,255,255,0.4);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .lounge-file-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.6);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all var(--transition);
-  }
-
-  .lounge-file-label:hover {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-  }
-
-  .lounge-now-playing {
-    color: rgba(255,255,255,0.6);
-    font-size: 13px;
-    font-style: italic;
-  }
 </style>
 </head>
 <body>
@@ -262,225 +72,26 @@
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
+      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
 </nav>
 
 <section class="hero">
-  <h1>Welcome</h1>
-  <p>Made by Evan Cruz</p>
-  <div class="hero-buttons">
+  <img src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif" alt="" class="hero-img anim-scale-in">
+  <h1 class="anim-fade-up anim-delay-1">Welcome</h1>
+  <p class="anim-fade-up anim-delay-2">Made by Evan Cruz</p>
+  <div class="hero-buttons anim-fade-up anim-delay-3">
     <a href="/games.html" class="btn btn-primary">Browse Games</a>
+    <a href="/lounge.html" class="btn btn-secondary">Sound Lounge</a>
     <a href="/dashboard.html" class="btn btn-secondary">Dashboard</a>
     <a href="/about.html" class="btn btn-secondary">About Me</a>
   </div>
 </section>
 
-<section class="visualizer-lounge">
-  <div class="visualizer-lounge-bg"></div>
-  <div class="visualizer-content">
-    <h2>Sound Lounge</h2>
-    <p>Paste a Spotify link or upload your own track.</p>
-
-    <div class="lounge-input-row">
-      <input type="text" class="lounge-input" id="spotifyInput" placeholder="Paste a Spotify link (track, album, or playlist)..." onkeydown="if(event.key==='Enter')loadSpotify()">
-      <button class="lounge-btn" onclick="loadSpotify()">Load</button>
-    </div>
-
-    <div class="spotify-embed" id="spotifyEmbed" style="display:none;"></div>
-
-    <div class="lounge-or">or play your own file</div>
-
-    <label class="lounge-file-label">
-      Choose audio file
-      <input type="file" id="audioFileInput" accept="audio/*" style="display:none" onchange="loadAudioFile(this)">
-    </label>
-
-    <div class="lounge-now-playing" id="nowPlaying" style="display:none;"></div>
-
-    <div class="visualizer-canvas-wrap">
-      <canvas id="visualizerCanvas"></canvas>
-    </div>
-
-    <div class="lounge-controls" id="audioControls" style="display:none;">
-      <button class="lounge-btn" id="loungePlayBtn">&#9654; Play</button>
-      <input type="range" class="volume-slider" id="loungeVolume" min="0" max="1" step="0.01" value="0.5">
-    </div>
-  </div>
-</section>
-
-<script>
-(function() {
-  const canvas = document.getElementById('visualizerCanvas');
-  const ctx = canvas.getContext('2d');
-  const playBtn = document.getElementById('loungePlayBtn');
-  const volumeSlider = document.getElementById('loungeVolume');
-  const audioControls = document.getElementById('audioControls');
-  const nowPlayingEl = document.getElementById('nowPlaying');
-
-  let audioCtx, analyser, source, gainNode;
-  let audio = null;
-  let playing = false;
-  let animId = null;
-  let hasAudioFile = false;
-
-  // Spotify embed
-  window.loadSpotify = function() {
-    const input = document.getElementById('spotifyInput').value.trim();
-    if (!input) return;
-
-    // Parse Spotify URL: open.spotify.com/track/ID, open.spotify.com/album/ID, etc.
-    let embedUrl = '';
-    const match = input.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/);
-    if (match) {
-      embedUrl = 'https://open.spotify.com/embed/' + match[1] + '/' + match[2] + '?utm_source=generator&theme=0';
-    } else if (input.match(/spotify:(track|album|playlist|episode|show):([a-zA-Z0-9]+)/)) {
-      const m = input.match(/spotify:(track|album|playlist|episode|show):([a-zA-Z0-9]+)/);
-      embedUrl = 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] + '?utm_source=generator&theme=0';
-    }
-
-    if (!embedUrl) {
-      alert('Paste a valid Spotify link (e.g. https://open.spotify.com/track/...)');
-      return;
-    }
-
-    const embedDiv = document.getElementById('spotifyEmbed');
-    embedDiv.innerHTML = '<iframe src="' + embedUrl + '" height="152" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
-    embedDiv.style.display = 'block';
-
-    // Hide audio file controls when using Spotify
-    audioControls.style.display = 'none';
-    if (audio) { audio.pause(); playing = false; }
-    nowPlayingEl.style.display = 'none';
-  };
-
-  // Audio file upload
-  window.loadAudioFile = function(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Hide Spotify embed
-    document.getElementById('spotifyEmbed').style.display = 'none';
-    document.getElementById('spotifyEmbed').innerHTML = '';
-
-    if (audio) {
-      audio.pause();
-      playing = false;
-    }
-
-    audio = new Audio(URL.createObjectURL(file));
-    audio.loop = true;
-
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (source) {
-      try { source.disconnect(); } catch(e) {}
-    }
-    source = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    gainNode = audioCtx.createGain();
-    analyser.fftSize = 256;
-    source.connect(gainNode);
-    gainNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    gainNode.gain.value = parseFloat(volumeSlider.value);
-    hasAudioFile = true;
-
-    audioControls.style.display = 'flex';
-    nowPlayingEl.textContent = 'Now playing: ' + file.name;
-    nowPlayingEl.style.display = 'block';
-    playBtn.innerHTML = '&#9654; Play';
-  };
-
-  function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  }
-
-  function draw() {
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    const bufLen = analyser.frequencyBinCount;
-    const data = new Uint8Array(bufLen);
-    analyser.getByteFrequencyData(data);
-
-    ctx.clearRect(0, 0, w, h);
-
-    const barCount = Math.min(bufLen, 64);
-    const barW = w / barCount;
-    const gap = 2;
-
-    for (let i = 0; i < barCount; i++) {
-      const val = data[i] / 255;
-      const barH = val * h * 0.9;
-      const x = i * barW;
-
-      const gradient = ctx.createLinearGradient(x, h, x, h - barH);
-      gradient.addColorStop(0, 'rgba(124,141,181,0.9)');
-      gradient.addColorStop(1, 'rgba(142,158,197,0.3)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x + gap / 2, h - barH, barW - gap, barH);
-
-      ctx.fillStyle = 'rgba(124,141,181,0.08)';
-      ctx.fillRect(x + gap / 2, h, barW - gap, barH * 0.3);
-    }
-
-    animId = requestAnimationFrame(draw);
-  }
-
-  function drawIdle() {
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    ctx.clearRect(0, 0, w, h);
-    const barCount = 64;
-    const barW = w / barCount;
-    const t = Date.now() / 1000;
-    for (let i = 0; i < barCount; i++) {
-      const val = 0.08 + 0.06 * Math.sin(t * 1.5 + i * 0.3);
-      const barH = val * h;
-      const x = i * barW;
-      ctx.fillStyle = 'rgba(124,141,181,0.25)';
-      ctx.fillRect(x + 1, h - barH, barW - 2, barH);
-    }
-    if (!playing) animId = requestAnimationFrame(drawIdle);
-  }
-
-  playBtn.addEventListener('click', function() {
-    if (!audio) return;
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
-    if (playing) {
-      audio.pause();
-      playing = false;
-      playBtn.innerHTML = '&#9654; Play';
-      cancelAnimationFrame(animId);
-      drawIdle();
-    } else {
-      audio.play();
-      playing = true;
-      playBtn.innerHTML = '&#9646;&#9646; Pause';
-      cancelAnimationFrame(animId);
-      draw();
-    }
-  });
-
-  volumeSlider.addEventListener('input', function() {
-    if (gainNode) gainNode.gain.value = parseFloat(this.value);
-  });
-
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-  drawIdle();
-})();
-</script>
-
 <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
 
-<!-- Settings -->
 <button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
 <div class="settings-panel">
   <h4>Settings</h4>
@@ -506,6 +117,15 @@ function setTheme(t) {
 <footer class="footer">
   Evan's Playhouse
 </footer>
+
+<script>
+(function(){
+  var els = document.querySelectorAll('.card,.reveal');
+  els.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity 0.6s ease, transform 0.6s ease';});
+  var obs = new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';obs.unobserve(e.target);}});},{threshold:0.1});
+  els.forEach(function(el){obs.observe(el);});
+})();
+</script>
 
 </body>
 </html>

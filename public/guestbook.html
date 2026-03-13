@@ -8,9 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(160deg, var(--bg) 0%, #e8e3de 50%, #ddd8d3 100%);
     background-attachment: fixed;
   }
 
@@ -124,6 +122,30 @@
     border: 1px solid var(--border);
   }
 
+  .gb-entry-audio {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .gb-audio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .gb-audio-label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   .gb-empty {
     text-align: center;
     color: var(--text-muted);
@@ -153,6 +175,7 @@
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
+      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html" class="active">Guestbook</a></li>
     </ul>
   </div>
@@ -172,9 +195,14 @@
         Attach image
         <input type="file" id="gbImgInput" accept="image/*" style="display:none" onchange="previewGbImg(this)">
       </label>
+      <label class="gb-audio-label">
+        Attach song
+        <input type="file" id="gbAudioInput" accept="audio/*" style="display:none" onchange="previewGbAudio(this)">
+      </label>
       <button class="btn btn-primary" onclick="postEntry()">Post</button>
     </div>
     <div class="gb-img-preview" id="gbImgPreview"></div>
+    <div id="gbAudioPreview" style="margin-top:8px;"></div>
   </div>
 
   <div class="gb-entries" id="gbEntries">
@@ -182,7 +210,7 @@
   </div>
 
   <div class="gb-clear">
-    <button class="btn btn-secondary" onclick="if(confirm('Clear all entries?')){localStorage.removeItem('ep_guestbook');renderEntries();}">Clear All</button>
+    <button class="btn btn-secondary" onclick="clearGuestbook()">Clear All (Owner Only)</button>
   </div>
 </main>
 
@@ -193,6 +221,8 @@
 <script>
   let entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
   let gbPendingImg = null;
+  let gbPendingAudio = null;
+  let gbPendingAudioName = null;
 
   function previewGbImg(input) {
     const file = input.files[0];
@@ -226,6 +256,26 @@
     document.getElementById('gbImgInput').value = '';
   }
 
+  function previewGbAudio(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2000000) { alert('Audio file too large (max 2MB). Try a shorter clip.'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      gbPendingAudio = e.target.result;
+      gbPendingAudioName = file.name;
+      document.getElementById('gbAudioPreview').innerHTML = '<span style="font-size:13px;color:var(--text-muted);">Song: ' + escHtml(file.name) + '</span> <button class="gb-audio-label" onclick="clearGbAudio()" style="padding:4px 8px;font-size:12px;">x</button>';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearGbAudio() {
+    gbPendingAudio = null;
+    gbPendingAudioName = null;
+    document.getElementById('gbAudioPreview').innerHTML = '';
+    document.getElementById('gbAudioInput').value = '';
+  }
+
   function renderEntries() {
     entries = JSON.parse(localStorage.getItem('ep_guestbook') || '[]');
     const container = document.getElementById('gbEntries');
@@ -244,6 +294,9 @@
       if (e.img) {
         html += '<img class="gb-entry-img" src="' + e.img + '" alt="Attached image">';
       }
+      if (e.audio) {
+        html += '<audio class="gb-entry-audio" controls src="' + e.audio + '"></audio>';
+      }
       div.innerHTML = html;
       container.appendChild(div);
     });
@@ -252,20 +305,22 @@
   function postEntry() {
     const name = document.getElementById('gbName').value.trim() || 'Anonymous';
     const msg = document.getElementById('gbMsg').value.trim();
-    if (!msg && !gbPendingImg) return;
+    if (!msg && !gbPendingImg && !gbPendingAudio) return;
     const entry = { name, msg: msg || '', time: new Date().toISOString() };
     if (gbPendingImg) entry.img = gbPendingImg;
+    if (gbPendingAudio) entry.audio = gbPendingAudio;
     entries.push(entry);
     try {
       localStorage.setItem('ep_guestbook', JSON.stringify(entries));
     } catch(e) {
-      alert('Storage full! Try removing old entries or using smaller images.');
+      alert('Storage full! Try removing old entries or using smaller files.');
       entries.pop();
       return;
     }
     document.getElementById('gbName').value = '';
     document.getElementById('gbMsg').value = '';
     clearGbImg();
+    clearGbAudio();
     renderEntries();
 
     const log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
@@ -278,6 +333,17 @@
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+  }
+
+  function clearGuestbook() {
+    const pw = prompt('Enter the owner password to clear all entries:');
+    if (pw === 'evan') {
+      localStorage.removeItem('ep_guestbook');
+      entries = [];
+      renderEntries();
+    } else if (pw !== null) {
+      alert('Wrong password.');
+    }
   }
 
   renderEntries();

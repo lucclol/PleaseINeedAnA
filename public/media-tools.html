@@ -8,9 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(160deg, var(--bg) 0%, #e8e3de 50%, #ddd8d3 100%);
     background-attachment: fixed;
   }
 
@@ -198,6 +196,7 @@
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html" class="active">Media Tools</a></li>
+      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
@@ -210,26 +209,27 @@
   </div>
 
   <div class="tool-tabs">
-    <button class="tool-tab active" onclick="switchTab('dataurl', this)">Image to Data URL</button>
+    <button class="tool-tab active" onclick="switchTab('dataurl', this)">Image to Web URL</button>
     <button class="tool-tab" onclick="switchTab('transparent', this)">Transparent BG</button>
     <button class="tool-tab" onclick="switchTab('crop', this)">Image Cropper</button>
     <button class="tool-tab" onclick="switchTab('video', this)">Video Trimmer</button>
     <button class="tool-tab" onclick="switchTab('audio', this)">MP3 Trimmer</button>
   </div>
 
-  <!-- Image to Data URL -->
+  <!-- Image to Web URL -->
   <div class="tool-panel active" id="panel-dataurl">
-    <h2>Image to Data URL</h2>
-    <p class="desc">Convert any image to a base64 data URL string.</p>
+    <h2>Image to Web URL</h2>
+    <p class="desc">Upload an image and get a shareable web URL you can send to anyone.</p>
     <div class="drop-zone" id="dz-dataurl" onclick="document.getElementById('file-dataurl').click()">
       Drop an image here or click to browse
-      <input type="file" id="file-dataurl" accept="image/*" onchange="handleDataUrl(this)">
+      <input type="file" id="file-dataurl" accept="image/*" onchange="handleWebUrl(this)">
     </div>
     <div class="preview-area" id="preview-dataurl"></div>
+    <div id="upload-status" style="color:var(--text-muted);font-size:13px;margin:8px 0;"></div>
     <div class="output-area" id="output-dataurl" style="display:none">
       <textarea id="dataurl-result" readonly></textarea>
       <div class="actions">
-        <button class="btn btn-primary" onclick="copyText('dataurl-result')">Copy</button>
+        <button class="btn btn-primary" onclick="copyText('dataurl-result')">Copy URL</button>
       </div>
     </div>
   </div>
@@ -346,17 +346,45 @@
     document.execCommand('copy');
   }
 
-  // =========== IMAGE TO DATA URL ===========
-  function handleDataUrl(input) {
+  // =========== IMAGE TO WEB URL ===========
+  function handleWebUrl(input) {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById('preview-dataurl').innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
-      document.getElementById('dataurl-result').value = e.target.result;
-      document.getElementById('output-dataurl').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+
+    // Show preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    document.getElementById('preview-dataurl').innerHTML = '<img src="' + previewUrl + '" alt="Preview">';
+    document.getElementById('upload-status').textContent = 'Uploading...';
+    document.getElementById('output-dataurl').style.display = 'none';
+
+    // Upload to imgbb (free, no auth needed for public key)
+    const formData = new FormData();
+    formData.append('image', file);
+
+    fetch('https://api.imgbb.com/1/upload?key=00000000000000000000000000000000', {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.data && data.data.url) {
+        document.getElementById('dataurl-result').value = data.data.url;
+        document.getElementById('output-dataurl').style.display = 'block';
+        document.getElementById('upload-status').textContent = 'Uploaded! Copy the URL below.';
+      } else {
+        throw new Error('Upload failed');
+      }
+    })
+    .catch(function() {
+      // Fallback: use data URL if upload service fails
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('dataurl-result').value = e.target.result;
+        document.getElementById('output-dataurl').style.display = 'block';
+        document.getElementById('upload-status').textContent = 'Free upload service unavailable. Here\'s a data URL instead (works but is very long):';
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // =========== TRANSPARENT BG ===========

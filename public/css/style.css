@@ -507,6 +507,116 @@ a:hover {
   color: var(--accent);
 }
 
+/* ============================
+   Animations
+   ============================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.anim-fade-up {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.anim-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.anim-scale-in {
+  opacity: 0;
+  animation: scaleIn 0.5s ease forwards;
+}
+
+.anim-delay-1 { animation-delay: 0.1s; }
+.anim-delay-2 { animation-delay: 0.2s; }
+.anim-delay-3 { animation-delay: 0.3s; }
+.anim-delay-4 { animation-delay: 0.4s; }
+.anim-delay-5 { animation-delay: 0.5s; }
+.anim-delay-6 { animation-delay: 0.6s; }
+
+/* Scroll-triggered animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Animated floating logo */
+.floating-logo {
+  animation: pulse 3s ease-in-out infinite, float 4s ease-in-out infinite;
+}
+
+/* Hover lift for cards */
+.card {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Nav link underline animation */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.nav-links a {
+  position: relative;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 60%;
+}
+
+.nav-home-btn::after {
+  display: none !important;
+}
+
+/* Button press effect */
+.btn:active {
+  transform: scale(0.97);
+}
+
 .text-muted { color: var(--text-muted); }
 .text-accent { color: var(--accent); }
 .mt-1 { margin-top: 8px; }

@@ -8,9 +8,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body {
-    background-image: url('https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif');
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(160deg, var(--bg) 0%, #e8e3de 50%, #ddd8d3 100%);
     background-attachment: fixed;
   }
 
@@ -112,6 +110,7 @@
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
+      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
@@ -190,6 +189,15 @@
 
 <footer class="footer">Evan's Playhouse</footer>
 
+<script>
+(function(){
+  var els = document.querySelectorAll('.game-card');
+  var delay = 0;
+  els.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity 0.5s ease '+delay+'s, transform 0.5s ease '+delay+'s';delay+=0.08;});
+  var obs = new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';obs.unobserve(e.target);}});},{threshold:0.1});
+  els.forEach(function(el){obs.observe(el);});
+})();
+</script>
 <button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
 <div class="settings-panel">
   <h4>Settings</h4>
