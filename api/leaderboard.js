@@ -1,4 +1,27 @@
-const { kv } = require('@vercel/kv');
+let kv;
+try { kv = require('@vercel/kv').kv; } catch (e) { kv = null; }
+
+// In-memory fallback when KV is not configured
+let memoryData = { snake: [], rhythm: [], typing: [] };
+
+async function getData() {
+  if (kv) {
+    try {
+      return (await kv.get('leaderboard_data')) || { snake: [], rhythm: [], typing: [] };
+    } catch (e) { /* fall through to memory */ }
+  }
+  return memoryData;
+}
+
+async function saveData(data) {
+  if (kv) {
+    try {
+      await kv.set('leaderboard_data', data);
+      return;
+    } catch (e) { /* fall through to memory */ }
+  }
+  memoryData = data;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,11 +31,7 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const data = (await kv.get('leaderboard_data')) || {
-        snake: [],
-        rhythm: [],
-        typing: []
-      };
+      const data = await getData();
       return res.status(200).json(data);
     }
 
@@ -26,12 +45,7 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid game' });
       }
 
-      const data = (await kv.get('leaderboard_data')) || {
-        snake: [],
-        rhythm: [],
-        typing: []
-      };
-
+      const data = await getData();
       const entry = {
         name: name.slice(0, 20),
         score: Number(score),
@@ -39,19 +53,18 @@ module.exports = async function handler(req, res) {
       };
 
       data[game].push(entry);
-      // Sort by score descending, keep top 50
       data[game].sort((a, b) => b.score - a.score);
       if (data[game].length > 50) data[game] = data[game].slice(0, 50);
 
-      await kv.set('leaderboard_data', data);
-      return res.status(200).json({ ok: true, rank: data[game].findIndex(e => e.name === entry.name && e.score === entry.score) + 1 });
+      await saveData(data);
+      return res.status(200).json({
+        ok: true,
+        rank: data[game].findIndex(e => e.name === entry.name && e.score === entry.score) + 1
+      });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
-    return res.status(500).json({
-      error: 'Database not configured. Add a Vercel KV store from your Vercel dashboard.',
-      details: err.message
-    });
+    return res.status(500).json({ error: err.message });
   }
 };
