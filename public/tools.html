@@ -3,9 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <title>Tools - Evan's Playhouse</title>
 <link rel="stylesheet" href="css/style.css">
 <style>
+  body {
+    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
   /* Todo List */
   .todo-container {
     background: var(--bg-card);
@@ -145,66 +153,84 @@
     color: var(--accent);
   }
 
-  /* Calculator */
-  .calc-container {
+  /* Journal */
+  .journal-container {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 24px;
-    max-width: 320px;
     margin-bottom: 24px;
   }
 
-  .calc-display {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    text-align: right;
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    color: var(--text-heading);
-    margin-bottom: 16px;
-    min-height: 60px;
-    word-break: break-all;
-    overflow: hidden;
-  }
-
-  .calc-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-
-  .calc-btn {
+  .journal-textarea {
+    width: 100%;
+    min-height: 200px;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 14px;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all var(--transition);
+    font-size: 14px;
+    line-height: 1.7;
+    outline: none;
+    resize: vertical;
+    margin-bottom: 12px;
   }
 
-  .calc-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-light);
-  }
-
-  .calc-btn.op {
-    color: var(--accent);
-  }
-
-  .calc-btn.eq {
-    background: var(--accent);
-    color: var(--bg);
+  .journal-textarea:focus {
     border-color: var(--accent);
   }
 
-  .calc-btn.eq:hover {
-    background: var(--accent-hover);
+  .journal-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .journal-entries {
+    margin-top: 20px;
+  }
+
+  .journal-entry {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .journal-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .journal-entry-date {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .journal-entry-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all var(--transition);
+  }
+
+  .journal-entry-delete:hover {
+    color: #b57c7c;
+    background: rgba(181, 124, 124, 0.1);
+  }
+
+  .journal-entry-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
   }
 
   .tools-grid {
@@ -235,6 +261,7 @@
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html" class="active">Tools</a></li>
+      <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
@@ -266,32 +293,13 @@
       </div>
     </div>
 
-    <!-- Calculator -->
+    <!-- Journal -->
     <div class="tool-section">
-      <h3>Calculator</h3>
-      <div class="calc-container">
-        <div class="calc-display" id="calcDisplay">0</div>
-        <div class="calc-grid">
-          <button class="calc-btn op" onclick="calcClear()">C</button>
-          <button class="calc-btn op" onclick="calcBackspace()">&#8592;</button>
-          <button class="calc-btn op" onclick="calcOp('%')">%</button>
-          <button class="calc-btn op" onclick="calcOp('/')">/</button>
-          <button class="calc-btn" onclick="calcNum('7')">7</button>
-          <button class="calc-btn" onclick="calcNum('8')">8</button>
-          <button class="calc-btn" onclick="calcNum('9')">9</button>
-          <button class="calc-btn op" onclick="calcOp('*')">x</button>
-          <button class="calc-btn" onclick="calcNum('4')">4</button>
-          <button class="calc-btn" onclick="calcNum('5')">5</button>
-          <button class="calc-btn" onclick="calcNum('6')">6</button>
-          <button class="calc-btn op" onclick="calcOp('-')">-</button>
-          <button class="calc-btn" onclick="calcNum('1')">1</button>
-          <button class="calc-btn" onclick="calcNum('2')">2</button>
-          <button class="calc-btn" onclick="calcNum('3')">3</button>
-          <button class="calc-btn op" onclick="calcOp('+')">+</button>
-          <button class="calc-btn" onclick="calcNum('0')" style="grid-column: span 2">0</button>
-          <button class="calc-btn" onclick="calcNum('.')">.</button>
-          <button class="calc-btn eq" onclick="calcEquals()">=</button>
-        </div>
+      <h3>Journal</h3>
+      <div class="journal-container">
+        <textarea class="journal-textarea" id="journalInput" placeholder="Write whatever's on your mind..."></textarea>
+        <button class="btn btn-primary" onclick="addJournalEntry()">Save Entry</button>
+        <div class="journal-entries" id="journalEntries"></div>
       </div>
     </div>
 
@@ -365,45 +373,46 @@
     resetTimer();
   }
 
-  // =========== CALCULATOR ===========
-  let calcExpr = '';
-  let calcNew = true;
+  // =========== JOURNAL ===========
+  let journalEntries = JSON.parse(localStorage.getItem('ep_journal') || '[]');
 
-  function calcNum(n) {
-    if (calcNew) { calcExpr = ''; calcNew = false; }
-    calcExpr += n;
-    document.getElementById('calcDisplay').textContent = calcExpr;
-  }
-
-  function calcOp(op) {
-    calcNew = false;
-    calcExpr += ' ' + op + ' ';
-    document.getElementById('calcDisplay').textContent = calcExpr;
-  }
-
-  function calcEquals() {
-    try {
-      const result = Function('"use strict"; return (' + calcExpr + ')')();
-      document.getElementById('calcDisplay').textContent = result;
-      calcExpr = String(result);
-      calcNew = true;
-    } catch(e) {
-      document.getElementById('calcDisplay').textContent = 'Error';
-      calcExpr = '';
-      calcNew = true;
+  function renderJournal() {
+    const container = document.getElementById('journalEntries');
+    if (journalEntries.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted);font-size:14px;margin-top:16px;">No entries yet.</p>';
+      return;
     }
+    container.innerHTML = '';
+    journalEntries.slice().reverse().forEach((entry, ri) => {
+      const i = journalEntries.length - 1 - ri;
+      const div = document.createElement('div');
+      div.className = 'journal-entry';
+      const date = new Date(entry.time);
+      const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      div.innerHTML = '<div class="journal-entry-header"><span class="journal-entry-date">' + dateStr + '</span><button class="journal-entry-delete" onclick="deleteJournalEntry(' + i + ')">x</button></div>'
+        + '<div class="journal-entry-text">' + escHtml(entry.text) + '</div>';
+      container.appendChild(div);
+    });
   }
 
-  function calcClear() {
-    calcExpr = '';
-    calcNew = true;
-    document.getElementById('calcDisplay').textContent = '0';
+  function addJournalEntry() {
+    const input = document.getElementById('journalInput');
+    const text = input.value.trim();
+    if (!text) return;
+    journalEntries.push({ text, time: new Date().toISOString() });
+    localStorage.setItem('ep_journal', JSON.stringify(journalEntries));
+    input.value = '';
+    renderJournal();
+    logActivity('Wrote a journal entry');
   }
 
-  function calcBackspace() {
-    calcExpr = calcExpr.trimEnd().slice(0, -1).trimEnd();
-    document.getElementById('calcDisplay').textContent = calcExpr || '0';
+  function deleteJournalEntry(i) {
+    journalEntries.splice(i, 1);
+    localStorage.setItem('ep_journal', JSON.stringify(journalEntries));
+    renderJournal();
   }
+
+  renderJournal();
 
   // =========== TODO LIST ===========
   let todos = JSON.parse(localStorage.getItem('ep_todos') || '[]');

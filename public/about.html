@@ -3,9 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <title>About - Evan's Playhouse</title>
 <link rel="stylesheet" href="css/style.css">
 <style>
+  body {
+    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
   .about-hero {
     position: relative;
     min-height: 70vh;
@@ -44,9 +52,9 @@
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(26, 22, 18, 0.4) 0%,
-      rgba(26, 22, 18, 0.7) 60%,
-      rgba(26, 22, 18, 0.95) 100%
+      rgba(244, 241, 238, 0.2) 0%,
+      rgba(244, 241, 238, 0.6) 60%,
+      rgba(244, 241, 238, 0.95) 100%
     );
   }
 
@@ -60,13 +68,13 @@
   .about-content h1 {
     font-size: clamp(32px, 6vw, 52px);
     margin-bottom: 16px;
-    color: #fff;
+    color: var(--text-heading);
   }
 
   .about-content p {
     font-size: 16px;
     line-height: 1.8;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text);
     margin-bottom: 12px;
   }
 
@@ -155,6 +163,7 @@
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html" class="active">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
@@ -164,48 +173,24 @@
   <div class="about-hero">
     <div class="about-bg"></div>
     <div class="about-content">
+      <img src="https://image2url.com/r2/default/images/1773360304948-10cb74f6-0426-475d-9d22-5afe1d9f2603.png" alt="Evan" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--border);margin-bottom:16px;">
       <h1>Evan</h1>
-      <p>Welcome to my corner of the internet. I built this place to have fun and share some of the stuff I like.</p>
+      <p>Hi, i'm evan. I just add to this when im bored blehhh</p>
     </div>
   </div>
 
   <div class="about-section">
     <h2>About This Site</h2>
-    <p>Evan's Playhouse is a personal website and digital hangout. It's got games, tools, and whatever else I feel like adding. Everything here is built from scratch -- no frameworks, no fuss.</p>
+    <p>This is just a lounge with games and random stuff lol</p>
   </div>
 
   <div class="about-section">
     <h2>Interests</h2>
     <p>Some things I'm into:</p>
     <div class="interests-grid">
-      <div class="interest-tag">Gaming</div>
-      <div class="interest-tag">Music</div>
+      <div class="interest-tag">Mewgenics</div>
+      <div class="interest-tag">Roblox</div>
       <div class="interest-tag">Coding</div>
-      <div class="interest-tag">Building Stuff</div>
-      <div class="interest-tag">The Internet</div>
-      <div class="interest-tag">Hanging Out</div>
-    </div>
-  </div>
-
-  <div class="about-section">
-    <h2>The Details</h2>
-    <div class="about-details">
-      <div class="detail-row">
-        <span class="detail-label">Site Name</span>
-        <span class="detail-value">Evan's Playhouse</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Built With</span>
-        <span class="detail-value">HTML, CSS, JavaScript</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Hosted On</span>
-        <span class="detail-value">Vercel</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Vibe</span>
-        <span class="detail-value">Chill</span>
-      </div>
     </div>
   </div>
 </main>

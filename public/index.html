@@ -4,8 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evan's Playhouse</title>
+<link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <link rel="stylesheet" href="css/style.css">
 <style>
+  body {
+    background-image: url('https://image2url.com/r2/default/images/1773360140530-9e3dc47c-9bb5-44dd-ba63-b717b63e4494.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
   .hero {
     display: flex;
     flex-direction: column;
@@ -14,6 +23,13 @@
     min-height: calc(100vh - 60px);
     text-align: center;
     padding: 40px 24px;
+  }
+
+  .hero-gif {
+    width: clamp(120px, 20vw, 200px);
+    height: auto;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
   }
 
   .hero h1 {
@@ -49,45 +65,6 @@
     text-align: center;
   }
 
-  /* Ambient background */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    overflow: hidden;
-  }
-
-  .ambient-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.06;
-  }
-
-  .ambient-orb:nth-child(1) {
-    width: 500px; height: 500px;
-    background: #c9a87c;
-    top: -100px; right: -100px;
-    animation: float1 20s ease-in-out infinite;
-  }
-
-  .ambient-orb:nth-child(2) {
-    width: 400px; height: 400px;
-    background: #7c9ac9;
-    bottom: -50px; left: -100px;
-    animation: float2 25s ease-in-out infinite;
-  }
-
-  @keyframes float1 {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-40px, 30px); }
-  }
-  @keyframes float2 {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(30px, -40px); }
-  }
-
   .divider {
     width: 60px;
     height: 2px;
@@ -98,11 +75,6 @@
 </style>
 </head>
 <body>
-
-<div class="ambient">
-  <div class="ambient-orb"></div>
-  <div class="ambient-orb"></div>
-</div>
 
 <nav class="nav">
   <div class="nav-inner">
@@ -117,14 +89,16 @@
       <li><a href="/games.html">Games</a></li>
       <li><a href="/about.html">About</a></li>
       <li><a href="/tools.html">Tools</a></li>
+      <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
     </ul>
   </div>
 </nav>
 
 <section class="hero">
-  <h1>Welcome to the Playhouse</h1>
-  <p>Kick back, play some games, mess around with tools, or just hang out. This is Evan's corner of the internet.</p>
+  <img src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif" alt="" class="hero-gif">
+  <h1>Welcome</h1>
+  <p>Made by Evan Cruz</p>
   <div class="hero-buttons">
     <a href="/games.html" class="btn btn-primary">Browse Games</a>
     <a href="/dashboard.html" class="btn btn-secondary">Dashboard</a>
@@ -140,7 +114,7 @@
     <a href="/games.html" class="card">
       <div class="card-icon">//</div>
       <h3>Games</h3>
-      <p>Rhythm game, snake, tic-tac-toe, memory match, and a typing test. More coming.</p>
+      <p>Rhythm game, snake, tic-tac-toe, sudoku, and a typing test. More coming.</p>
       <span class="card-tag">Play</span>
     </a>
     <a href="/dashboard.html" class="card">
@@ -152,8 +126,14 @@
     <a href="/tools.html" class="card">
       <div class="card-icon">%</div>
       <h3>Tools</h3>
-      <p>To-do list, pomodoro timer, calculator, and other useful stuff.</p>
+      <p>To-do list, pomodoro timer, journal, and other useful stuff.</p>
       <span class="card-tag">Utility</span>
+    </a>
+    <a href="/media-tools.html" class="card">
+      <div class="card-icon">~</div>
+      <h3>Media Tools</h3>
+      <p>Image trimmer, background remover, video trimmer, MP3 cutter, and more.</p>
+      <span class="card-tag">Media</span>
     </a>
     <a href="/guestbook.html" class="card">
       <div class="card-icon">&amp;</div>
