@@ -255,18 +255,29 @@
   function previewGbImg(input) {
     const file = input.files[0];
     if (!file) return;
-    const img = new Image();
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      const maxW = 800;
-      const scale = Math.min(1, maxW / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      gbPendingImg = canvas.toDataURL('image/jpeg', 0.7);
-      document.getElementById('gbImgPreview').innerHTML = '<img src="' + gbPendingImg + '"> <button class="gb-img-label" onclick="clearGbImg()" style="padding:4px 8px">x</button>';
-    };
-    img.src = URL.createObjectURL(file);
+    const isGif = file.type === 'image/gif';
+    if (isGif) {
+      if (file.size > 1000000) { alert('GIF too large (max 1MB).'); input.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        gbPendingImg = e.target.result;
+        document.getElementById('gbImgPreview').innerHTML = '<img src="' + gbPendingImg + '"> <button class="gb-img-label" onclick="clearGbImg()" style="padding:4px 8px">x</button>';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 800;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        gbPendingImg = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('gbImgPreview').innerHTML = '<img src="' + gbPendingImg + '"> <button class="gb-img-label" onclick="clearGbImg()" style="padding:4px 8px">x</button>';
+      };
+      img.src = URL.createObjectURL(file);
+    }
   }
 
   function clearGbImg() {
