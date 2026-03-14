@@ -298,7 +298,7 @@
   }
 
   /* ==========================================================
-     5. PAGE TRANSITIONS (zoom in/out)
+     5. PAGE TRANSITIONS (slide)
      ========================================================== */
   function initTransitions() {
     if (typeof gsap === 'undefined') return;
@@ -306,45 +306,35 @@
     var wrapper = document.querySelector('.page-transition-wrapper');
     if (!wrapper) return;
 
-    // --- Enter animation ---
+    // --- Enter animation: slide in from the direction we're arriving from ---
     var transData = sessionStorage.getItem('ev_transition');
     if (transData) {
       sessionStorage.removeItem('ev_transition');
       var data = JSON.parse(transData);
 
-      gsap.set(wrapper, { opacity: 0 });
+      // Forward: page slides in from the right (content already there, we move into it)
+      // Back: page slides in from the left
+      var fromX = data.type === 'forward' ? '100%' : '-100%';
 
-      if (data.type === 'zoom-in') {
-        gsap.set(wrapper, { scale: 0.92, transformOrigin: 'center center' });
-        gsap.to(wrapper, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-          delay: 0.05,
-        });
-      } else if (data.type === 'zoom-out') {
-        gsap.set(wrapper, { scale: 1.08 });
-        gsap.to(wrapper, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-          delay: 0.05,
-        });
-      }
+      gsap.set(wrapper, { x: fromX, opacity: 1 });
+      gsap.to(wrapper, {
+        x: '0%',
+        duration: 0.6,
+        ease: 'power3.out',
+        delay: 0.02,
+      });
     } else {
+      // No transition data (direct load) — just fade in
       gsap.set(wrapper, { opacity: 0 });
       gsap.to(wrapper, {
         opacity: 1,
-        y: 0,
-        duration: 0.5,
+        duration: 0.4,
         ease: 'power2.out',
         delay: 0.05,
       });
     }
 
-    // --- Intercept navigation links for zoom transition ---
+    // --- Intercept navigation links for slide transition ---
     document.addEventListener('click', function (e) {
       var link = e.target.closest('a[href]');
       if (!link) return;
@@ -358,29 +348,21 @@
       STATE.isTransitioning = true;
 
       var isBack = link.classList.contains('back-btn') || link.dataset.transition === 'back';
-      var transType = isBack ? 'zoom-out' : 'zoom-in';
 
-      sessionStorage.setItem('ev_transition', JSON.stringify({ type: transType }));
+      // Store direction so the new page knows which way to slide in
+      sessionStorage.setItem('ev_transition', JSON.stringify({
+        type: isBack ? 'back' : 'forward'
+      }));
 
-      var tl = gsap.timeline({
+      // Slide current page out
+      var toX = isBack ? '100%' : '-100%';
+
+      gsap.to(wrapper, {
+        x: toX,
+        duration: 0.5,
+        ease: 'power3.in',
         onComplete: function () { window.location.href = href; },
       });
-
-      if (isBack) {
-        tl.to(wrapper, {
-          scale: 0.92,
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.in',
-        });
-      } else {
-        tl.to(wrapper, {
-          scale: 1.05,
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.in',
-        });
-      }
     });
   }
 
@@ -464,7 +446,7 @@
       });
     });
 
-    // Zoom-in click on section cards
+    // Slide click on section cards
     sections.forEach(function (sec) {
       var href = sec.dataset.href;
       if (!href) return;
@@ -474,19 +456,14 @@
         e.preventDefault();
         STATE.isTransitioning = true;
 
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'zoom-in' }));
+        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'forward' }));
 
         var wrapper = document.querySelector('.home-wrapper') || document.body;
-        var rect = sec.getBoundingClientRect();
-        var ox = rect.left + rect.width / 2;
-        var oy = rect.top + rect.height / 2;
 
         gsap.to(wrapper, {
-          scale: 1.5,
-          opacity: 0,
-          duration: 0.6,
+          x: '-100%',
+          duration: 0.5,
           ease: 'power3.in',
-          transformOrigin: ox + 'px ' + oy + 'px',
           onComplete: function () { window.location.href = href; },
         });
       });
