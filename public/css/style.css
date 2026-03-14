@@ -510,6 +510,7 @@ a:hover { color: var(--accent-hover); }
   min-height: 100vh;
   position: relative;
   z-index: 1;
+  background: #12121a;
 }
 
 @media (max-width: 768px) {
@@ -527,7 +528,7 @@ a:hover { color: var(--accent-hover); }
   overflow: hidden;
   cursor: pointer;
   transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  background: #1e1e2e;
+  background: #252538;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -547,7 +548,7 @@ a:hover { color: var(--accent-hover); }
 }
 
 .section-card:hover {
-  background: #262640;
+  background: #2c2c45;
   border-color: rgba(255, 255, 255, 0.18);
 }
 
