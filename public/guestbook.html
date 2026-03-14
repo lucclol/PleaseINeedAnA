@@ -176,24 +176,58 @@
 <body>
 <canvas id="ev-particles"></canvas>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
-      <span>Evan's Lounge</span>
-    </a>
-    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
-    <ul class="nav-links">
-      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
-      <li><a href="/dashboard.html">Dashboard</a></li>
-      <li><a href="/games.html">Games</a></li>
-      <li><a href="/tools.html">Tools</a></li>
-      <li><a href="/guestbook.html" class="active">Guestbook</a></li>
-      <li><a href="/about.html">About</a></li>
-    </ul>
-    <div class="nav-controls">
-      <button class="sound-toggle magnetic" onclick="toggleSound()">Sound On</button>
+<!-- Minimal top bar -->
+<div class="top-bar">
+  <a href="/" class="top-bar-logo">
+    <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
+    <span>Evan's Lounge</span>
+  </a>
+  <button class="menu-trigger magnetic" aria-label="Menu">
+    <div class="menu-icon">
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
+  </button>
+</div>
+
+<div class="slide-menu-overlay"></div>
+
+<nav class="slide-menu">
+  <ul class="slide-menu-nav">
+    <li class="slide-menu-item">
+      <a href="/games.html" class="slide-menu-link">
+        <span class="slide-menu-num">01</span>
+        <span class="slide-menu-label">Games</span>
+      </a>
+    </li>
+    <li class="slide-menu-item">
+      <a href="/tools.html" class="slide-menu-link">
+        <span class="slide-menu-num">02</span>
+        <span class="slide-menu-label">Tools</span>
+      </a>
+    </li>
+    <li class="slide-menu-item">
+      <a href="/dashboard.html" class="slide-menu-link">
+        <span class="slide-menu-num">03</span>
+        <span class="slide-menu-label">Dashboard</span>
+      </a>
+    </li>
+    <li class="slide-menu-item">
+      <a href="/guestbook.html" class="slide-menu-link">
+        <span class="slide-menu-num">04</span>
+        <span class="slide-menu-label">Guestbook</span>
+      </a>
+    </li>
+    <li class="slide-menu-item">
+      <a href="/about.html" class="slide-menu-link">
+        <span class="slide-menu-num">05</span>
+        <span class="slide-menu-label">About</span>
+      </a>
+    </li>
+  </ul>
+  <div class="slide-menu-footer">
+    <button class="sound-toggle" onclick="toggleSound()">Sound On</button>
   </div>
 </nav>
 
