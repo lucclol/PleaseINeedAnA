@@ -357,37 +357,52 @@ function update(ts) {
   if (!state.lastFrame) state.lastFrame = ts;
   const dt = Math.min(ts - state.lastFrame, 40);
   state.lastFrame = ts;
-  const elapsed = ts - state.startTime;
+
+  // Use actual audio position as the timing source for perfect sync
+  const elapsed = music.currentTime * 1000;
   const hitY = getHitY();
-  const slowZoneStart = hitY - 100;
 
   $('progressBar').style.width = Math.min(elapsed / state.songDuration, 1) * 100 + '%';
+
+  // Calculate travel time at constant speed (no slow zone)
+  const totalDist = hitY + 80; // from y=-80 to y=hitY
+  const pxPerMs = state.speed / 16.67;
+  const travelTime = totalDist / pxPerMs;
 
   // Spawn arrows ahead of their beat time so they arrive at hit zone on time
   while (state.spawnIndex < state.songPattern.length) {
     const n = state.songPattern[state.spawnIndex];
-    const travelTime = (hitY + 80) / state.speed * 16.67;
-    if (elapsed >= n.time - travelTime) { spawnArrow(n.dir); state.spawnIndex++; }
+    if (elapsed >= n.time - travelTime) {
+      spawnArrow(n.dir);
+      // Store the exact target time on the arrow for precise positioning
+      state.arrows[state.arrows.length - 1].targetTime = n.time;
+      state.spawnIndex++;
+    }
     else break;
   }
 
-  const basePx = state.speed / 16.67;
+  // Move arrows — position based on time remaining until beat
   for (let i = state.arrows.length - 1; i >= 0; i--) {
     const a = state.arrows[i];
     if (a.hit) continue;
-    let speedMult = 1;
-    if (a.y > slowZoneStart) {
-      const progress = (a.y - slowZoneStart) / (hitY - slowZoneStart + 60);
-      speedMult = 1 - (progress * 0.35);
-    }
-    a.y += basePx * dt * Math.max(speedMult, 0.5);
+
+    // Calculate where the arrow should be based on how much time is left
+    const timeUntilBeat = a.targetTime - elapsed;
+    const msFromStart = travelTime - timeUntilBeat;
+    a.y = -80 + (msFromStart * pxPerMs);
+
     a.el.style.top = a.y + 'px';
-    if (a.y > slowZoneStart - 50) {
-      const glowIntensity = Math.min((a.y - slowZoneStart + 50) / 150, 1);
+
+    // Glow as arrow approaches hit zone
+    const distToHit = hitY - a.y;
+    if (distToHit < 150 && distToHit > -100) {
+      const glowIntensity = Math.min((150 - distToHit) / 150, 1);
       const glowSize = 10 + glowIntensity * 25;
       a.el.style.textShadow = '0 0 ' + glowSize + 'px currentColor';
       a.el.style.opacity = 0.7 + glowIntensity * 0.3;
     }
+
+    // Miss: arrow passed well below hit zone
     if (a.y > hitY + 100) {
       a.hit = true; a.el.style.opacity = '0.1';
       a.el.style.transition = 'opacity .3s';
@@ -552,8 +567,23 @@ async function startGame() {
 
   updateHUD();
   $('startScreen').classList.add('hidden'); $('gameOver').classList.remove('show');
-  state.running = true; state.startTime = performance.now();
-  playMusic(); startVoice(); requestAnimationFrame(update);
+
+  // Start music and sync game loop to audio
+  music.currentTime = 0;
+  music.volume = 0.7;
+  music.play().then(() => {
+    state.running = true;
+    state.lastFrame = 0;
+    startVoice();
+    requestAnimationFrame(update);
+  }).catch(e => {
+    console.log('Audio blocked:', e);
+    // Start anyway with performance timer fallback
+    state.running = true;
+    state.lastFrame = 0;
+    startVoice();
+    requestAnimationFrame(update);
+  });
 }
 
 function endGame() {
