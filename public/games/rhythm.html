@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,9 @@
 <title>Rhythm Game - Evan's Lounge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
+<script>var t = localStorage.getItem('ep_theme');
+if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+else { document.documentElement.setAttribute('data-theme', 'dark'); }</script>
 <link rel="stylesheet" href="../css/style.css">
 <style>
   /* Override body for fullscreen game */
@@ -129,7 +131,7 @@
 </head>
 <body>
 
-<a href="/games.html" class="back-link">Back to Games</a>
+<a href="/games.html" class="back-link" data-transition="back">Back to Games</a>
 
 <div class="start-screen" id="startScreen">
   <h1>RHYTHM GAME</h1>
@@ -444,5 +446,8 @@ $('startBtn').addEventListener('click', startGame);
 $('restartBtn').addEventListener('click', startGame);
 </script>
 <script src="/js/mini-player.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+<script src="/js/engine.js"></script>
 </body>
 </html>
