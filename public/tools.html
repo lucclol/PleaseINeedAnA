@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <title>Tools - Evan's Lounge</title>
-<script>
-  var t = localStorage.getItem('ep_theme');
-  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  else { document.documentElement.setAttribute('data-theme', 'dark'); }
-</script>
+<script>document.documentElement.setAttribute('data-theme', 'dark');</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
   /* Todo List */
@@ -357,6 +353,161 @@
     font-size: 18px;
     margin-bottom: 16px;
   }
+
+  /* Media Tools */
+  .tool-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tool-tab {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+  }
+
+  .tool-tab:hover, .tool-tab.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .tool-panel {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+
+  .tool-panel.active { display: block; }
+
+  .tool-panel h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .tool-panel .desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 20px;
+    background: var(--bg-surface);
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .drop-zone input[type="file"] { display: none; }
+
+  .preview-area {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .preview-area img, .preview-area video, .preview-area canvas {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .output-area {
+    margin-top: 20px;
+  }
+
+  .output-area textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    color: var(--text);
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+    word-break: break-all;
+  }
+
+  .output-area textarea:focus { border-color: var(--accent); }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .slider-row label {
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 80px;
+  }
+
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .slider-row .val {
+    font-size: 13px;
+    color: var(--text);
+    min-width: 50px;
+    text-align: right;
+  }
+
+  .range-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .range-controls label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .range-controls input[type="number"] {
+    width: 80px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .range-controls input[type="number"]:focus { border-color: var(--accent); }
+
+  .media-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -374,14 +525,11 @@
       <li><a href="/dashboard.html">Dashboard</a></li>
       <li><a href="/games.html">Games</a></li>
       <li><a href="/tools.html" class="active">Tools</a></li>
-      <li><a href="/media-tools.html">Media Tools</a></li>
-      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
     <div class="nav-controls">
-      <button class="sound-toggle magnetic" onclick="toggleSound()">&#9834; On</button>
-      <button class="magnetic" onclick="toggleTheme()">Theme</button>
+      <button class="sound-toggle magnetic" onclick="toggleSound()">Sound On</button>
     </div>
   </div>
 </nav>
@@ -391,7 +539,7 @@
   <a href="/" class="back-btn" data-transition="back">Home</a>
   <div class="page-header">
     <h1>Tools</h1>
-    <p>Just some tools and what not.</p>
+    <p>Productivity tools and media editing, all in your browser.</p>
   </div>
 
   <div class="tools-grid">
@@ -447,6 +595,115 @@
           <button class="btn btn-primary" onclick="addTodo()">Add</button>
         </div>
         <ul class="todo-list" id="todoList"></ul>
+      </div>
+    </div>
+
+    <!-- Media Tools -->
+    <div class="tool-section" style="grid-column: 1 / -1;">
+      <h3>Media Tools</h3>
+      <div class="tool-tabs">
+        <button class="tool-tab active" onclick="switchMediaTab('dataurl', this)">Image to Web URL</button>
+        <button class="tool-tab" onclick="switchMediaTab('transparent', this)">Transparent BG</button>
+        <button class="tool-tab" onclick="switchMediaTab('crop', this)">Image Cropper</button>
+        <button class="tool-tab" onclick="switchMediaTab('video', this)">Video Trimmer</button>
+        <button class="tool-tab" onclick="switchMediaTab('audio', this)">MP3 Trimmer</button>
+      </div>
+
+      <div class="tool-panel active" id="panel-dataurl">
+        <h4>Image to Web URL</h4>
+        <p class="desc">Upload an image and get a shareable web URL you can send to anyone.</p>
+        <div class="drop-zone" id="dz-dataurl" onclick="document.getElementById('file-dataurl').click()">
+          Drop an image here or click to browse
+          <input type="file" id="file-dataurl" accept="image/*" onchange="handleWebUrl(this)">
+        </div>
+        <div class="preview-area" id="preview-dataurl"></div>
+        <div id="upload-status" style="color:var(--text-muted);font-size:13px;margin:8px 0;"></div>
+        <div class="output-area" id="output-dataurl" style="display:none">
+          <textarea id="dataurl-result" readonly></textarea>
+          <div class="media-actions">
+            <button class="btn btn-primary" onclick="copyText('dataurl-result')">Copy URL</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-panel" id="panel-transparent">
+        <h4>Transparent Background</h4>
+        <p class="desc">Remove a solid background color from an image. Works best with uniform backgrounds.</p>
+        <div class="drop-zone" id="dz-transparent" onclick="document.getElementById('file-transparent').click()">
+          Drop an image here or click to browse
+          <input type="file" id="file-transparent" accept="image/*" onchange="handleTransparent(this)">
+        </div>
+        <div class="slider-row" id="tolerance-row" style="display:none">
+          <label>Tolerance</label>
+          <input type="range" id="tolerance" min="0" max="100" value="30" oninput="updateTransparent()">
+          <span class="val" id="tolerance-val">30</span>
+        </div>
+        <div class="preview-area" id="preview-transparent"></div>
+        <div class="media-actions" id="actions-transparent" style="display:none">
+          <button class="btn btn-primary" onclick="downloadTransparent()">Download PNG</button>
+        </div>
+      </div>
+
+      <div class="tool-panel" id="panel-crop">
+        <h4>Image Cropper</h4>
+        <p class="desc">Upload an image and use the sliders to adjust each edge.</p>
+        <div class="drop-zone" id="dz-crop" onclick="document.getElementById('file-crop').click()">
+          Drop an image here or click to browse
+          <input type="file" id="file-crop" accept="image/*" onchange="handleCrop(this)">
+        </div>
+        <div id="crop-sliders" style="display:none;">
+          <div class="slider-row"><label>Left</label><input type="range" id="cropLeft" min="0" max="100" value="0" oninput="updateCropPreview()"><span class="val" id="cropLeftVal">0%</span></div>
+          <div class="slider-row"><label>Right</label><input type="range" id="cropRight" min="0" max="100" value="100" oninput="updateCropPreview()"><span class="val" id="cropRightVal">100%</span></div>
+          <div class="slider-row"><label>Top</label><input type="range" id="cropTop" min="0" max="100" value="0" oninput="updateCropPreview()"><span class="val" id="cropTopVal">0%</span></div>
+          <div class="slider-row"><label>Bottom</label><input type="range" id="cropBottom" min="0" max="100" value="100" oninput="updateCropPreview()"><span class="val" id="cropBottomVal">100%</span></div>
+        </div>
+        <div class="preview-area" id="preview-crop"></div>
+        <div class="media-actions" id="actions-crop" style="display:none">
+          <button class="btn btn-primary" onclick="downloadCrop()">Download Cropped</button>
+          <button class="btn btn-secondary" onclick="resetCropSliders()">Reset</button>
+        </div>
+      </div>
+
+      <div class="tool-panel" id="panel-video">
+        <h4>Video Trimmer</h4>
+        <p class="desc">Trim a video by setting start and end times. Output is saved as WebM.</p>
+        <div class="drop-zone" id="dz-video" onclick="document.getElementById('file-video').click()">
+          Drop a video here or click to browse
+          <input type="file" id="file-video" accept="video/*" onchange="handleVideo(this)">
+        </div>
+        <div class="preview-area" id="preview-video"></div>
+        <div class="range-controls" id="controls-video" style="display:none">
+          <label>Start (s):</label>
+          <input type="number" id="video-start" value="0" min="0" step="0.1">
+          <label>End (s):</label>
+          <input type="number" id="video-end" value="0" min="0" step="0.1">
+          <span id="video-duration" style="color:var(--text-muted);font-size:13px;"></span>
+        </div>
+        <div class="media-actions" id="actions-video" style="display:none">
+          <button class="btn btn-primary" onclick="trimVideo()">Trim Video</button>
+        </div>
+        <div id="video-status" style="color:var(--text-muted);font-size:13px;margin-top:12px;"></div>
+      </div>
+
+      <div class="tool-panel" id="panel-audio">
+        <h4>MP3 / Audio Trimmer</h4>
+        <p class="desc">Trim an audio file by setting start and end times. Output is saved as WAV.</p>
+        <div class="drop-zone" id="dz-audio" onclick="document.getElementById('file-audio').click()">
+          Drop an audio file here or click to browse
+          <input type="file" id="file-audio" accept="audio/*" onchange="handleAudio(this)">
+        </div>
+        <div class="preview-area" id="preview-audio"></div>
+        <div class="range-controls" id="controls-audio" style="display:none">
+          <label>Start (s):</label>
+          <input type="number" id="audio-start" value="0" min="0" step="0.1">
+          <label>End (s):</label>
+          <input type="number" id="audio-end" value="0" min="0" step="0.1">
+          <span id="audio-duration" style="color:var(--text-muted);font-size:13px;"></span>
+        </div>
+        <div class="media-actions" id="actions-audio" style="display:none">
+          <button class="btn btn-primary" onclick="trimAudio()">Trim Audio</button>
+        </div>
+        <div id="audio-status" style="color:var(--text-muted);font-size:13px;margin-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -673,6 +930,356 @@
   }
 
   renderTodos();
+
+  // =========== MEDIA TOOLS ===========
+  function switchMediaTab(id, btn) {
+    document.querySelectorAll('.tool-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tool-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Drag & drop for media tools
+  document.querySelectorAll('.drop-zone').forEach(function(dz) {
+    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
+    dz.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      var input = dz.querySelector('input[type="file"]');
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  function copyText(id) {
+    var el = document.getElementById(id);
+    el.select();
+    document.execCommand('copy');
+  }
+
+  // Image to Web URL
+  function handleWebUrl(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var previewUrl = URL.createObjectURL(file);
+    document.getElementById('preview-dataurl').innerHTML = '<img src="' + previewUrl + '" alt="Preview">';
+    document.getElementById('upload-status').textContent = 'Uploading...';
+    document.getElementById('output-dataurl').style.display = 'none';
+    var formData = new FormData();
+    formData.append('image', file);
+    fetch('https://api.imgbb.com/1/upload?key=00000000000000000000000000000000', {
+      method: 'POST',
+      body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.data && data.data.url) {
+        document.getElementById('dataurl-result').value = data.data.url;
+        document.getElementById('output-dataurl').style.display = 'block';
+        document.getElementById('upload-status').textContent = 'Uploaded! Copy the URL below.';
+      } else {
+        throw new Error('Upload failed');
+      }
+    })
+    .catch(function() {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('dataurl-result').value = e.target.result;
+        document.getElementById('output-dataurl').style.display = 'block';
+        document.getElementById('upload-status').textContent = 'Free upload service unavailable. Here\'s a data URL instead (works but is very long):';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Transparent BG
+  var transparentImg = null;
+  var transparentCanvas = null;
+
+  function handleTransparent(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var img = new Image();
+    img.onload = function() {
+      transparentImg = img;
+      document.getElementById('tolerance-row').style.display = 'flex';
+      document.getElementById('actions-transparent').style.display = 'flex';
+      updateTransparent();
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function updateTransparent() {
+    if (!transparentImg) return;
+    var tol = parseInt(document.getElementById('tolerance').value);
+    document.getElementById('tolerance-val').textContent = tol;
+    var canvas = document.createElement('canvas');
+    canvas.width = transparentImg.naturalWidth;
+    canvas.height = transparentImg.naturalHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(transparentImg, 0, 0);
+    var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var d = data.data;
+    var bgR = d[0], bgG = d[1], bgB = d[2];
+    for (var i = 0; i < d.length; i += 4) {
+      var diff = Math.abs(d[i] - bgR) + Math.abs(d[i+1] - bgG) + Math.abs(d[i+2] - bgB);
+      if (diff < tol * 3) d[i+3] = 0;
+    }
+    ctx.putImageData(data, 0, 0);
+    transparentCanvas = canvas;
+    var preview = document.getElementById('preview-transparent');
+    preview.innerHTML = '';
+    var displayCanvas = document.createElement('canvas');
+    displayCanvas.width = canvas.width;
+    displayCanvas.height = canvas.height;
+    displayCanvas.style.maxWidth = '100%';
+    displayCanvas.style.maxHeight = '400px';
+    displayCanvas.style.borderRadius = 'var(--radius-sm)';
+    displayCanvas.style.border = '1px solid var(--border)';
+    displayCanvas.style.background = 'repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 16px 16px';
+    displayCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    preview.appendChild(displayCanvas);
+  }
+
+  function downloadTransparent() {
+    if (!transparentCanvas) return;
+    var a = document.createElement('a');
+    a.download = 'transparent.png';
+    a.href = transparentCanvas.toDataURL('image/png');
+    a.click();
+  }
+
+  // Image Cropper
+  var cropImg = null;
+
+  function handleCrop(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var img = new Image();
+    img.onload = function() {
+      cropImg = img;
+      document.getElementById('crop-sliders').style.display = 'block';
+      document.getElementById('actions-crop').style.display = 'flex';
+      resetCropSliders();
+      updateCropPreview();
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function resetCropSliders() {
+    document.getElementById('cropLeft').value = 0;
+    document.getElementById('cropRight').value = 100;
+    document.getElementById('cropTop').value = 0;
+    document.getElementById('cropBottom').value = 100;
+    updateCropPreview();
+  }
+
+  function updateCropPreview() {
+    if (!cropImg) return;
+    var left = parseInt(document.getElementById('cropLeft').value);
+    var right = parseInt(document.getElementById('cropRight').value);
+    var top = parseInt(document.getElementById('cropTop').value);
+    var bottom = parseInt(document.getElementById('cropBottom').value);
+    document.getElementById('cropLeftVal').textContent = left + '%';
+    document.getElementById('cropRightVal').textContent = right + '%';
+    document.getElementById('cropTopVal').textContent = top + '%';
+    document.getElementById('cropBottomVal').textContent = bottom + '%';
+    var w = cropImg.naturalWidth, h = cropImg.naturalHeight;
+    var sx = Math.floor(w * left / 100), sy = Math.floor(h * top / 100);
+    var sw = Math.max(1, Math.floor(w * right / 100) - sx);
+    var sh = Math.max(1, Math.floor(h * bottom / 100) - sy);
+    var canvas = document.createElement('canvas');
+    canvas.width = sw; canvas.height = sh;
+    canvas.style.maxWidth = '100%'; canvas.style.maxHeight = '400px';
+    canvas.style.borderRadius = 'var(--radius-sm)'; canvas.style.border = '1px solid var(--border)';
+    canvas.getContext('2d').drawImage(cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
+    var preview = document.getElementById('preview-crop');
+    preview.innerHTML = '';
+    preview.appendChild(canvas);
+  }
+
+  function downloadCrop() {
+    if (!cropImg) return;
+    var left = parseInt(document.getElementById('cropLeft').value);
+    var right = parseInt(document.getElementById('cropRight').value);
+    var top = parseInt(document.getElementById('cropTop').value);
+    var bottom = parseInt(document.getElementById('cropBottom').value);
+    var w = cropImg.naturalWidth, h = cropImg.naturalHeight;
+    var sx = Math.floor(w * left / 100), sy = Math.floor(h * top / 100);
+    var sw = Math.max(1, Math.floor(w * right / 100) - sx);
+    var sh = Math.max(1, Math.floor(h * bottom / 100) - sy);
+    var canvas = document.createElement('canvas');
+    canvas.width = sw; canvas.height = sh;
+    canvas.getContext('2d').drawImage(cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
+    var a = document.createElement('a');
+    a.download = 'cropped.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+
+  // Video Trimmer
+  var videoFile = null;
+
+  function handleVideo(input) {
+    var file = input.files[0];
+    if (!file) return;
+    videoFile = file;
+    var url = URL.createObjectURL(file);
+    var preview = document.getElementById('preview-video');
+    preview.innerHTML = '<video src="' + url + '" controls style="max-width:100%;max-height:400px;border-radius:var(--radius-sm);border:1px solid var(--border);"></video>';
+    var vid = preview.querySelector('video');
+    vid.onloadedmetadata = function() {
+      var dur = vid.duration.toFixed(1);
+      document.getElementById('video-end').value = dur;
+      document.getElementById('video-duration').textContent = 'Duration: ' + dur + 's';
+      document.getElementById('controls-video').style.display = 'flex';
+      document.getElementById('actions-video').style.display = 'flex';
+    };
+  }
+
+  function trimVideo() {
+    if (!videoFile) return;
+    var start = parseFloat(document.getElementById('video-start').value) || 0;
+    var end = parseFloat(document.getElementById('video-end').value) || 0;
+    if (end <= start) { document.getElementById('video-status').textContent = 'End must be after start.'; return; }
+    document.getElementById('video-status').textContent = 'Trimming... this may take a moment.';
+    var video = document.createElement('video');
+    video.src = URL.createObjectURL(videoFile);
+    video.muted = true;
+    video.onloadedmetadata = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      var ctx = canvas.getContext('2d');
+      var stream = canvas.captureStream();
+      try {
+        var audioCtx2 = new AudioContext();
+        var source = audioCtx2.createMediaElementSource(video);
+        var dest = audioCtx2.createMediaStreamDestination();
+        source.connect(dest); source.connect(audioCtx2.destination);
+        dest.stream.getAudioTracks().forEach(function(t) { stream.addTrack(t); });
+      } catch(e) {}
+      var recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      var chunks = [];
+      recorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = function() {
+        var blob = new Blob(chunks, { type: 'video/webm' });
+        var a = document.createElement('a');
+        a.download = 'trimmed.webm';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        document.getElementById('video-status').textContent = 'Done! File downloaded.';
+      };
+      video.currentTime = start;
+      video.oncanplay = function() {
+        video.oncanplay = null;
+        video.muted = false;
+        video.play();
+        recorder.start();
+        var draw = function() {
+          if (video.currentTime >= end || video.ended) { recorder.stop(); video.pause(); return; }
+          ctx.drawImage(video, 0, 0);
+          requestAnimationFrame(draw);
+        };
+        draw();
+      };
+    };
+  }
+
+  // Audio Trimmer
+  var audioBuffer = null;
+  var audioCtxTrim = null;
+
+  function handleAudio(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var url = URL.createObjectURL(file);
+    var preview = document.getElementById('preview-audio');
+    preview.innerHTML = '<audio src="' + url + '" controls style="width:100%;margin-top:8px;"></audio>';
+    var aud = preview.querySelector('audio');
+    aud.onloadedmetadata = function() {
+      var dur = aud.duration.toFixed(1);
+      document.getElementById('audio-end').value = dur;
+      document.getElementById('audio-duration').textContent = 'Duration: ' + dur + 's';
+      document.getElementById('controls-audio').style.display = 'flex';
+      document.getElementById('actions-audio').style.display = 'flex';
+    };
+    audioCtxTrim = new (window.AudioContext || window.webkitAudioContext)();
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      audioCtxTrim.decodeAudioData(e.target.result, function(buffer) { audioBuffer = buffer; });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function trimAudio() {
+    if (!audioBuffer) { document.getElementById('audio-status').textContent = 'Still loading audio...'; return; }
+    var start = parseFloat(document.getElementById('audio-start').value) || 0;
+    var end = parseFloat(document.getElementById('audio-end').value) || 0;
+    if (end <= start) { document.getElementById('audio-status').textContent = 'End must be after start.'; return; }
+    document.getElementById('audio-status').textContent = 'Trimming...';
+    var sampleRate = audioBuffer.sampleRate;
+    var startSample = Math.floor(start * sampleRate);
+    var endSample = Math.floor(end * sampleRate);
+    var length = endSample - startSample;
+    var channels = audioBuffer.numberOfChannels;
+    var trimmed = audioCtxTrim.createBuffer(channels, length, sampleRate);
+    for (var ch = 0; ch < channels; ch++) {
+      var src = audioBuffer.getChannelData(ch);
+      var dst = trimmed.getChannelData(ch);
+      for (var i = 0; i < length; i++) dst[i] = src[startSample + i];
+    }
+    var wav = encodeWAV(trimmed);
+    var blob = new Blob([wav], { type: 'audio/wav' });
+    var a = document.createElement('a');
+    a.download = 'trimmed.wav';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    document.getElementById('audio-status').textContent = 'Done! File downloaded.';
+  }
+
+  function encodeWAV(buffer) {
+    var numChannels = buffer.numberOfChannels;
+    var sampleRate = buffer.sampleRate;
+    var bitDepth = 16;
+    var bytesPerSample = bitDepth / 8;
+    var blockAlign = numChannels * bytesPerSample;
+    var dataLength = buffer.length * blockAlign;
+    var totalLength = 44 + dataLength;
+    var arrayBuffer = new ArrayBuffer(totalLength);
+    var view = new DataView(arrayBuffer);
+    function writeString(offset, str) {
+      for (var i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    }
+    writeString(0, 'RIFF');
+    view.setUint32(4, totalLength - 8, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+    var offset = 44;
+    var chans = [];
+    for (var ch = 0; ch < numChannels; ch++) chans.push(buffer.getChannelData(ch));
+    for (var i = 0; i < buffer.length; i++) {
+      for (var ch = 0; ch < numChannels; ch++) {
+        var sample = chans[ch][i];
+        sample = Math.max(-1, Math.min(1, sample));
+        sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset, sample, true);
+        offset += 2;
+      }
+    }
+    return arrayBuffer;
+  }
 
   // =========== ACTIVITY LOG ===========
   function logActivity(text) {
