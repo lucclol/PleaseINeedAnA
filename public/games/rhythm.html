@@ -206,177 +206,138 @@ const music = $('bgMusic');
 document.querySelectorAll('.lane').forEach(l=>{lanes[l.dataset.dir]=l;});
 
 /* ----------------------------------------------------------
-   BEAT DETECTION: Offline analysis of the audio file
-   Analyzes energy peaks in frequency sub-bands to find beats
+   BEAT DETECTION: Fast energy-based onset detection
+   Uses RMS energy in time windows to find beats quickly
    ---------------------------------------------------------- */
 async function analyzeBeats() {
   $('analyzeOverlay').style.display = 'flex';
   $('analyzeText').textContent = 'LOADING AUDIO...';
   $('analyzeBar').style.width = '10%';
 
-  // Fetch the audio file as ArrayBuffer
-  const response = await fetch('/in-the-pool.mp3');
-  const arrayBuffer = await response.arrayBuffer();
+  try {
+    // Fetch the audio file
+    const response = await fetch('/in-the-pool.mp3');
+    const arrayBuffer = await response.arrayBuffer();
 
-  $('analyzeText').textContent = 'DECODING...';
-  $('analyzeBar').style.width = '30%';
+    $('analyzeText').textContent = 'DECODING...';
+    $('analyzeBar').style.width = '30%';
 
-  // Decode offline
-  const offCtx = new OfflineAudioContext(1, 1, 44100);
-  const audioBuffer = await offCtx.decodeAudioData(arrayBuffer);
-  state.songDuration = audioBuffer.duration * 1000; // ms
+    // Use a real AudioContext to decode
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    state.songDuration = audioBuffer.duration * 1000;
+    ctx.close();
 
-  $('analyzeText').textContent = 'ANALYZING BEATS...';
-  $('analyzeBar').style.width = '50%';
+    $('analyzeText').textContent = 'ANALYZING BEATS...';
+    $('analyzeBar').style.width = '50%';
 
-  // Get raw PCM data (mono)
-  const rawData = audioBuffer.getChannelData(0);
-  const sampleRate = audioBuffer.sampleRate;
+    // Get mono PCM data
+    const rawData = audioBuffer.getChannelData(0);
+    const sampleRate = audioBuffer.sampleRate;
 
-  // Split into small windows and compute energy
-  const windowSize = Math.floor(sampleRate * 0.02); // 20ms windows
-  const hopSize = Math.floor(windowSize / 2);        // 50% overlap
-  const numWindows = Math.floor((rawData.length - windowSize) / hopSize);
+    // Compute RMS energy in ~23ms windows (~43 windows/sec)
+    const windowSamples = Math.floor(sampleRate * 0.023);
+    const numWindows = Math.floor(rawData.length / windowSamples);
+    const energies = new Float32Array(numWindows);
 
-  // Compute energy for 4 frequency bands using simple bandpass
-  // Band 0 (kick/bass): 20-150 Hz -> left
-  // Band 1 (low-mid): 150-400 Hz -> down
-  // Band 2 (mid): 400-2000 Hz -> up
-  // Band 3 (hi-hat/treble): 2000-8000 Hz -> right
-  const bandEnergies = [[], [], [], []];
-  const bandFreqs = [[20, 150], [150, 400], [400, 2000], [2000, 8000]];
-
-  // Use FFT-like approach: compute energy in frequency bands per window
-  const fftSize = 2048;
-
-  for (let w = 0; w < numWindows; w++) {
-    const start = w * hopSize;
-    const chunk = rawData.slice(start, start + fftSize < rawData.length ? start + fftSize : rawData.length);
-    if (chunk.length < fftSize) break;
-
-    // Simple energy calculation per band using DFT on key frequencies
-    for (let b = 0; b < 4; b++) {
-      const fLow = bandFreqs[b][0];
-      const fHigh = bandFreqs[b][1];
-      let energy = 0;
-      // Sample a few frequencies in the band
-      const numFreqs = 8;
-      for (let fi = 0; fi < numFreqs; fi++) {
-        const freq = fLow + (fHigh - fLow) * fi / numFreqs;
-        const binIndex = Math.round(freq * fftSize / sampleRate);
-        // Goertzel-like: compute magnitude at this frequency
-        let real = 0, imag = 0;
-        const w0 = 2 * Math.PI * binIndex / fftSize;
-        for (let n = 0; n < fftSize; n++) {
-          real += chunk[n] * Math.cos(w0 * n);
-          imag -= chunk[n] * Math.sin(w0 * n);
-        }
-        energy += Math.sqrt(real * real + imag * imag);
-      }
-      bandEnergies[b].push(energy / numFreqs);
-    }
-
-    // Update progress
-    if (w % 500 === 0) {
-      const pct = 50 + (w / numWindows) * 40;
-      $('analyzeBar').style.width = pct + '%';
-    }
-  }
-
-  $('analyzeText').textContent = 'MAPPING BEATS...';
-  $('analyzeBar').style.width = '92%';
-
-  // Detect peaks in each band
-  const beats = [];
-  const minGapMs = 180; // Minimum gap between beats in same band
-
-  for (let b = 0; b < 4; b++) {
-    const energies = bandEnergies[b];
-    if (energies.length === 0) continue;
-
-    // Compute local average energy (sliding window)
-    const avgWindow = 40; // ~400ms context window
-    let lastBeatTime = -9999;
-
-    for (let i = avgWindow; i < energies.length - 1; i++) {
-      // Local average
-      let localAvg = 0;
-      for (let j = i - avgWindow; j < i; j++) localAvg += energies[j];
-      localAvg /= avgWindow;
-
-      // Peak detection: energy must exceed local average by threshold
-      const threshold = 1.4 + (b === 0 ? 0.1 : 0); // Slightly higher threshold for bass
-      if (energies[i] > localAvg * threshold && energies[i] > energies[i - 1] && energies[i] >= energies[i + 1]) {
-        const timeMs = (i * hopSize / sampleRate) * 1000;
-        if (timeMs - lastBeatTime >= minGapMs && timeMs > 1000 && timeMs < state.songDuration - 2000) {
-          beats.push({ time: timeMs, dir: dirs[b], energy: energies[i] / (localAvg || 1) });
-          lastBeatTime = timeMs;
-        }
-      }
-    }
-  }
-
-  // Sort by time
-  beats.sort((a, b) => a.time - b.time);
-
-  // If too many beats, keep the strongest ones (cap at ~3 per second)
-  const maxBeats = Math.floor(state.songDuration / 1000 * 3);
-  let finalBeats = beats;
-  if (beats.length > maxBeats) {
-    // Sort by energy, keep top maxBeats, then re-sort by time
-    beats.sort((a, b) => b.energy - a.energy);
-    finalBeats = beats.slice(0, maxBeats);
-    finalBeats.sort((a, b) => a.time - b.time);
-  }
-
-  // If too few beats detected, this means the analysis was too strict - lower threshold
-  if (finalBeats.length < 30) {
-    // Fallback: use simple overall energy peak detection
-    const overallEnergy = [];
     for (let w = 0; w < numWindows; w++) {
-      let e = 0;
-      for (let b = 0; b < 4; b++) {
-        if (w < bandEnergies[b].length) e += bandEnergies[b][w];
+      let sum = 0;
+      const offset = w * windowSamples;
+      for (let s = 0; s < windowSamples; s++) {
+        const v = rawData[offset + s];
+        sum += v * v;
       }
-      overallEnergy.push(e);
+      energies[w] = Math.sqrt(sum / windowSamples);
     }
-    finalBeats = [];
-    const oAvgWindow = 30;
-    let lastT = -9999;
-    for (let i = oAvgWindow; i < overallEnergy.length - 1; i++) {
+
+    $('analyzeBar').style.width = '70%';
+
+    // Yield to let the UI update
+    await new Promise(r => setTimeout(r, 0));
+
+    // Detect beats: energy peaks that exceed local average
+    const beats = [];
+    const contextSize = 20; // ~460ms look-back
+    const minGapWindows = Math.floor(0.18 * numWindows / (state.songDuration / 1000)); // ~180ms min gap
+    let lastBeatW = -999;
+
+    for (let i = contextSize; i < numWindows - 1; i++) {
+      // Local average
       let avg = 0;
-      for (let j = i - oAvgWindow; j < i; j++) avg += overallEnergy[j];
-      avg /= oAvgWindow;
-      if (overallEnergy[i] > avg * 1.2 && overallEnergy[i] > overallEnergy[i - 1] && overallEnergy[i] >= overallEnergy[i + 1]) {
-        const timeMs = (i * hopSize / sampleRate) * 1000;
-        if (timeMs - lastT >= minGapMs && timeMs > 1000 && timeMs < state.songDuration - 2000) {
-          finalBeats.push({ time: timeMs, dir: dirs[Math.floor(Math.random() * 4)], energy: overallEnergy[i] / (avg || 1) });
-          lastT = timeMs;
+      for (let j = i - contextSize; j < i; j++) avg += energies[j];
+      avg /= contextSize;
+
+      // Peak: exceeds local avg by 30%+ and is a local maximum
+      if (energies[i] > avg * 1.3 && energies[i] > energies[i - 1] && energies[i] >= energies[i + 1]) {
+        if (i - lastBeatW >= minGapWindows) {
+          const timeMs = (i * windowSamples / sampleRate) * 1000;
+          if (timeMs > 800 && timeMs < state.songDuration - 2000) {
+            // Assign direction based on energy magnitude bands
+            const ratio = energies[i] / (avg || 0.001);
+            let dir;
+            if (ratio > 2.0) dir = dirs[i % 4];        // Strong beat: cycle through
+            else if (ratio > 1.7) dir = dirs[(i * 3) % 4]; // Medium-strong
+            else if (ratio > 1.5) dir = dirs[(i * 7) % 4]; // Medium
+            else dir = dirs[(i * 11) % 4];                  // Gentle
+
+            beats.push({ time: timeMs, dir: dir });
+            lastBeatW = i;
+          }
         }
       }
     }
-  }
 
-  // Ensure no two beats at the exact same time have the same direction
-  for (let i = 1; i < finalBeats.length; i++) {
-    if (Math.abs(finalBeats[i].time - finalBeats[i - 1].time) < 50 && finalBeats[i].dir === finalBeats[i - 1].dir) {
-      // Shift to next available direction
-      const used = new Set();
-      used.add(finalBeats[i - 1].dir);
-      for (const d of dirs) {
-        if (!used.has(d)) { finalBeats[i].dir = d; break; }
+    $('analyzeBar').style.width = '85%';
+
+    // Cap at ~2.5 beats per second max
+    const maxBeats = Math.floor(state.songDuration / 1000 * 2.5);
+    let finalBeats = beats;
+    if (beats.length > maxBeats) {
+      // Keep evenly spaced subset
+      const step = beats.length / maxBeats;
+      finalBeats = [];
+      for (let i = 0; i < maxBeats; i++) {
+        finalBeats.push(beats[Math.floor(i * step)]);
       }
     }
+
+    // Ensure no adjacent beats have the same direction
+    for (let i = 1; i < finalBeats.length; i++) {
+      if (finalBeats[i].dir === finalBeats[i - 1].dir) {
+        const avoid = finalBeats[i - 1].dir;
+        finalBeats[i].dir = dirs.find(d => d !== avoid) || dirs[0];
+      }
+    }
+
+    state.songPattern = finalBeats;
+    state.songLength = state.songDuration + FADE_DURATION + 1000;
+
+    $('analyzeText').textContent = 'READY! ' + finalBeats.length + ' BEATS';
+    $('analyzeBar').style.width = '100%';
+
+    await new Promise(r => setTimeout(r, 500));
+    $('analyzeOverlay').style.display = 'none';
+
+  } catch (err) {
+    console.error('Beat analysis failed:', err);
+    $('analyzeText').textContent = 'ANALYSIS FAILED - USING FALLBACK';
+    $('analyzeBar').style.width = '100%';
+
+    // Fallback: generate pattern based on estimated BPM
+    state.songDuration = 180000; // assume 3 min
+    const p = [];
+    let t = 1500;
+    const beat = 500; // 120 BPM
+    while (t < state.songDuration - 3000) {
+      p.push({ time: t, dir: dirs[p.length % 4] });
+      t += beat;
+    }
+    state.songPattern = p;
+    state.songLength = state.songDuration + FADE_DURATION + 1000;
+
+    await new Promise(r => setTimeout(r, 800));
+    $('analyzeOverlay').style.display = 'none';
   }
-
-  state.songPattern = finalBeats;
-  state.songLength = state.songDuration + FADE_DURATION + 1000;
-
-  $('analyzeText').textContent = 'READY! ' + finalBeats.length + ' BEATS DETECTED';
-  $('analyzeBar').style.width = '100%';
-
-  await new Promise(r => setTimeout(r, 600));
-  $('analyzeOverlay').style.display = 'none';
 }
 
 /* ----------------------------------------------------------
