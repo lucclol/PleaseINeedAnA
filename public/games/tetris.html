@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <title>Tetris - Evan's Lounge</title>
-<script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
+<script>var t = localStorage.getItem('ep_theme');
+if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+else { document.documentElement.setAttribute('data-theme', 'dark'); }</script>
 <link rel="stylesheet" href="../css/style.css">
 <style>
   body {
@@ -184,7 +186,7 @@
     <ul class="nav-links">
       <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
       <li><a href="/dashboard.html">Dashboard</a></li>
-      <li><a href="/games.html" class="active">Games</a></li>
+      <li><a href="/games.html" class="active" data-transition="back">Games</a></li>
       <li><a href="/tools.html">Tools</a></li>
       <li><a href="/media-tools.html">Media Tools</a></li>
       <li><a href="/lounge.html">Lounge</a></li>
@@ -712,5 +714,8 @@
 </script>
 
 <script src="/js/mini-player.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+<script src="/js/engine.js"></script>
 </body>
 </html>

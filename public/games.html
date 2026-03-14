@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Games - Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
-<script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
+<script>
+  var t = localStorage.getItem('ep_theme');
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else { document.documentElement.setAttribute('data-theme', 'dark'); }
+</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
   .games-grid {
@@ -15,6 +19,7 @@
   }
 
   .game-card {
+    position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -26,11 +31,24 @@
     color: inherit;
   }
 
+  .game-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--accent-glow) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .game-card:hover::before {
+    opacity: 1;
+  }
+
   .game-card:hover {
     background: var(--bg-card-hover);
     border-color: var(--border-light);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px var(--shadow);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px var(--shadow), var(--glow-spread);
     color: inherit;
   }
 
@@ -91,6 +109,7 @@
 </style>
 </head>
 <body>
+<canvas id="ev-particles"></canvas>
 
 <nav class="nav">
   <div class="nav-inner">
@@ -109,10 +128,16 @@
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
+    <div class="nav-controls">
+      <button class="sound-toggle magnetic" onclick="toggleSound()">&#9834; On</button>
+      <button class="magnetic" onclick="toggleTheme()">Theme</button>
+    </div>
   </div>
 </nav>
 
+<div class="page-transition-wrapper">
 <main class="page">
+  <a href="/" class="back-btn" data-transition="back">Home</a>
   <div class="page-header">
     <h1>Games</h1>
     <p>Pick something and play. Scores are saved locally.</p>
@@ -192,32 +217,24 @@
     </a>
   </div>
 </main>
-
-<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
+</div>
 
 <footer class="footer">Evan's Lounge</footer>
 
 <script>
-(function(){
-  var els = document.querySelectorAll('.game-card');
-  var delay = 0;
-  els.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity 0.5s ease '+delay+'s, transform 0.5s ease '+delay+'s';delay+=0.08;});
-  var obs = new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';obs.unobserve(e.target);}});},{threshold:0.1});
-  els.forEach(function(el){obs.observe(el);});
-})();
+document.querySelectorAll('.game-card').forEach(function(el) {
+  el.addEventListener('mousemove', function(e) {
+    var rect = el.getBoundingClientRect();
+    var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+    el.style.setProperty('--mouse-x', x + '%');
+    el.style.setProperty('--mouse-y', y + '%');
+  });
+});
 </script>
-<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
-<div class="settings-panel">
-  <h4>Settings</h4>
-  <div class="theme-toggle">
-    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
-    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
-  </div>
-</div>
-<script>
-function setTheme(t){document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'');localStorage.setItem('ep_theme',t);document.getElementById('themeLight').classList.toggle('active',t==='light');document.getElementById('themeDark').classList.toggle('active',t==='dark');}
-(function(){var s=localStorage.getItem('ep_theme');if(s==='dark')setTheme('dark');})();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+<script src="/js/engine.js"></script>
 <script src="/js/mini-player.js"></script>
 </body>
 </html>

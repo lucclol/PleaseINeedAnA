@@ -1,122 +1,296 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
-<script>if(localStorage.getItem('ep_theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
+<script>
+  var t = localStorage.getItem('ep_theme');
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else { document.documentElement.setAttribute('data-theme', 'dark'); }
+</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
-  .hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 60px);
-    text-align: center;
-    padding: 40px 24px;
+  body { overflow-x: hidden; }
+
+  /* Scroll snap for full-screen sections */
+  .home-scroll {
+    scroll-snap-type: y mandatory;
+    overflow-y: auto;
+    height: 100vh;
+    scroll-behavior: smooth;
   }
 
-  .hero-img {
-    width: clamp(200px, 30vw, 340px);
-    height: auto;
-    border-radius: var(--radius);
-    margin-bottom: 28px;
-    box-shadow: 0 8px 32px var(--shadow);
+  .home-scroll > * {
+    scroll-snap-align: start;
+  }
+
+  /* Hero cinematic */
+  .home-hero {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-avatar {
+    width: clamp(100px, 15vw, 160px);
+    height: clamp(100px, 15vw, 160px);
+    border-radius: 50%;
+    object-fit: cover;
     border: 2px solid var(--border);
+    margin-bottom: 32px;
+    box-shadow: 0 0 60px var(--accent-glow), 0 8px 32px var(--shadow);
+    animation: glow-pulse 4s ease-in-out infinite;
   }
 
-  .hero h1 {
-    font-size: clamp(36px, 7vw, 64px);
-    margin-bottom: 16px;
-    line-height: 1.2;
-  }
-
-  .hero p {
+  .home-hero .tagline {
     color: var(--text-muted);
-    font-size: clamp(15px, 2vw, 18px);
-    max-width: 480px;
-    margin-bottom: 40px;
-    line-height: 1.7;
+    font-size: 14px;
+    margin-bottom: 32px;
+    max-width: 400px;
+    line-height: 1.8;
   }
 
-  .hero-buttons {
+  .hero-cta-group {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
     justify-content: center;
   }
+
+  /* Section card hover glow line */
+  .section-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .section-card:hover::after {
+    width: 100%;
+  }
+
+  /* Section icon */
+  .section-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    filter: grayscale(0.3);
+    transition: filter 0.3s ease, transform 0.3s ease;
+  }
+
+  .section-card:hover .section-icon {
+    filter: grayscale(0);
+    transform: scale(1.1);
+  }
+
+  /* Additional sections row */
+  .sections-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    padding: 0 2px;
+  }
+
+  @media (max-width: 768px) {
+    .sections-row-3 { grid-template-columns: 1fr; }
+  }
+
+  .sections-row-3 .section-card {
+    min-height: 40vh;
+  }
+
+  /* Footer section */
+  .home-footer-section {
+    min-height: 30vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .home-footer-section p {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .home-footer-section a {
+    color: var(--accent);
+  }
 </style>
 </head>
 <body>
 
+<canvas id="ev-particles"></canvas>
+
+<!-- Minimal cinematic nav -->
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-logo">
+    <a href="/" class="nav-logo magnetic">
       <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
       <span>Evan's Lounge</span>
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
-    <ul class="nav-links">
-      <li><a href="/" class="nav-home-btn" title="Home"><img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Home"></a></li>
-      <li><a href="/dashboard.html">Dashboard</a></li>
-      <li><a href="/games.html">Games</a></li>
-      <li><a href="/tools.html">Tools</a></li>
-      <li><a href="/media-tools.html">Media Tools</a></li>
-      <li><a href="/lounge.html">Lounge</a></li>
-      <li><a href="/guestbook.html">Guestbook</a></li>
-      <li><a href="/about.html">About</a></li>
-    </ul>
+    <div class="nav-controls">
+      <button class="sound-toggle magnetic" onclick="toggleSound()">&#9834; On</button>
+      <button class="magnetic" onclick="toggleTheme()">Theme</button>
+    </div>
   </div>
 </nav>
 
-<section class="hero">
-  <img src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif" alt="" class="hero-img anim-scale-in">
-  <h1 class="anim-fade-up anim-delay-1">Welcome</h1>
-  <p class="anim-fade-up anim-delay-2">Made by Evan Cruz</p>
-  <div class="hero-buttons anim-fade-up anim-delay-3">
-    <a href="/games.html" class="btn btn-primary">Browse Games</a>
-    <a href="/lounge.html" class="btn btn-secondary">Sound Lounge</a>
-    <a href="/dashboard.html" class="btn btn-secondary">Dashboard</a>
-    <a href="/about.html" class="btn btn-secondary">About Me</a>
-  </div>
-</section>
+<div class="home-wrapper home-scroll">
 
-<img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="" class="floating-logo">
+  <!-- ======= HERO ======= -->
+  <section class="home-hero">
+    <img
+      src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif"
+      alt="Evan"
+      class="hero-avatar anim-scale-in"
+    >
+    <h1 class="anim-fade-up anim-delay-1">Evan's Lounge</h1>
+    <p class="subtitle anim-fade-up anim-delay-2">An interactive experience</p>
+    <p class="tagline anim-fade-up anim-delay-3">
+      Games, tools, sounds &amp; more &mdash; built for vibes.
+    </p>
+    <div class="scroll-hint anim-fade-up anim-delay-5">&#8595; Scroll to explore</div>
+  </section>
 
-<button class="settings-btn" onclick="document.querySelector('.settings-panel').classList.toggle('open')">&#9881;</button>
-<div class="settings-panel">
-  <h4>Settings</h4>
-  <div class="theme-toggle">
-    <button class="theme-option active" id="themeLight" onclick="setTheme('light')">Light</button>
-    <button class="theme-option" id="themeDark" onclick="setTheme('dark')">Dark</button>
+  <!-- ======= MAIN SECTIONS (2x2 grid) ======= -->
+  <div class="sections-grid">
+
+    <div class="section-card" data-href="/games.html">
+      <span class="section-bg-text">Games</span>
+      <div class="section-inner">
+        <span class="section-icon">&#127918;</span>
+        <span class="section-number">01</span>
+        <h2>Games</h2>
+        <p class="section-desc">Rhythm, Snake, Tetris, Sudoku, Typing &amp; Tic-Tac-Toe</p>
+        <span class="section-cta">Enter Arcade</span>
+      </div>
+    </div>
+
+    <div class="section-card" data-href="/lounge.html">
+      <span class="section-bg-text">Lounge</span>
+      <div class="section-inner">
+        <span class="section-icon">&#127911;</span>
+        <span class="section-number">02</span>
+        <h2>Sound Lounge</h2>
+        <p class="section-desc">Stream music, build playlists, and vibe with the visualizer</p>
+        <span class="section-cta">Start Listening</span>
+      </div>
+    </div>
+
+    <div class="section-card" data-href="/tools.html">
+      <span class="section-bg-text">Tools</span>
+      <div class="section-inner">
+        <span class="section-icon">&#128736;</span>
+        <span class="section-number">03</span>
+        <h2>Tools</h2>
+        <p class="section-desc">Pomodoro timer, journal, and to-do list for productivity</p>
+        <span class="section-cta">Get Productive</span>
+      </div>
+    </div>
+
+    <div class="section-card" data-href="/dashboard.html">
+      <span class="section-bg-text">Stats</span>
+      <div class="section-inner">
+        <span class="section-icon">&#128202;</span>
+        <span class="section-number">04</span>
+        <h2>Dashboard</h2>
+        <p class="section-desc">Your stats, leaderboards, and activity at a glance</p>
+        <span class="section-cta">View Stats</span>
+      </div>
+    </div>
+
   </div>
+
+  <!-- ======= SECONDARY SECTIONS (3-column row) ======= -->
+  <div class="sections-row-3">
+
+    <div class="section-card" data-href="/media-tools.html">
+      <span class="section-bg-text">Media</span>
+      <div class="section-inner">
+        <span class="section-icon">&#127912;</span>
+        <span class="section-number">05</span>
+        <h2>Media Tools</h2>
+        <p class="section-desc">Image, video &amp; audio editing in the browser</p>
+        <span class="section-cta">Create</span>
+      </div>
+    </div>
+
+    <div class="section-card" data-href="/guestbook.html">
+      <span class="section-bg-text">Guest</span>
+      <div class="section-inner">
+        <span class="section-icon">&#128221;</span>
+        <span class="section-number">06</span>
+        <h2>Guestbook</h2>
+        <p class="section-desc">Leave a message, share images or audio</p>
+        <span class="section-cta">Sign</span>
+      </div>
+    </div>
+
+    <div class="section-card" data-href="/about.html">
+      <span class="section-bg-text">About</span>
+      <div class="section-inner">
+        <span class="section-icon">&#128100;</span>
+        <span class="section-number">07</span>
+        <h2>About</h2>
+        <p class="section-desc">The person behind the lounge</p>
+        <span class="section-cta">Meet Evan</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ======= FOOTER ======= -->
+  <div class="home-footer-section">
+    <div>
+      <p style="margin-bottom: 8px; font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Lounge</p>
+      <p>Made with care by Evan Cruz</p>
+    </div>
+  </div>
+
 </div>
 
+<!-- GSAP CDN -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+
+<!-- Engine -->
+<script src="/js/engine.js"></script>
+
+<!-- Homepage-specific: mouse tracking on section cards -->
 <script>
-function setTheme(t) {
-  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
-  localStorage.setItem('ep_theme', t);
-  document.getElementById('themeLight').classList.toggle('active', t === 'light');
-  document.getElementById('themeDark').classList.toggle('active', t === 'dark');
-}
 (function() {
-  var saved = localStorage.getItem('ep_theme');
-  if (saved === 'dark') setTheme('dark');
-})();
-</script>
+  // Track mouse position on section cards for radial glow
+  document.querySelectorAll('.section-card, .card').forEach(function(el) {
+    el.addEventListener('mousemove', function(e) {
+      var rect = el.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+      var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+      el.style.setProperty('--mouse-x', x + '%');
+      el.style.setProperty('--mouse-y', y + '%');
+    });
+  });
 
-<footer class="footer">
-  Evan's Lounge
-</footer>
+  // Visit counter
+  var visits = parseInt(localStorage.getItem('ep_visits') || '0') + 1;
+  localStorage.setItem('ep_visits', visits);
 
-<script>
-(function(){
-  var els = document.querySelectorAll('.card,.reveal');
-  els.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity 0.6s ease, transform 0.6s ease';});
-  var obs = new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';obs.unobserve(e.target);}});},{threshold:0.1});
-  els.forEach(function(el){obs.observe(el);});
+  // Log activity
+  try {
+    var log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
+    log.unshift({ page: 'Home', time: Date.now() });
+    if (log.length > 50) log = log.slice(0, 50);
+    localStorage.setItem('ep_activity', JSON.stringify(log));
+  } catch(e) {}
 })();
 </script>
 
