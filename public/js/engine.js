@@ -565,6 +565,64 @@
   };
 
   /* ==========================================================
+     12. BACKGROUND MUSIC (persists across pages)
+     ========================================================== */
+  function initBgMusic() {
+    // Don't play on rhythm game page — it has its own music
+    if (window.location.pathname.indexOf('rhythm') !== -1) return;
+
+    var audio = document.createElement('audio');
+    audio.id = 'ev-bg-music';
+    audio.loop = true;
+    audio.volume = 0.15;
+    audio.preload = 'auto';
+    audio.src = '/background.mp3';
+    document.body.appendChild(audio);
+
+    // Restore position from previous page
+    var savedTime = parseFloat(sessionStorage.getItem('ev_bgm_time') || '0');
+    if (savedTime > 0) audio.currentTime = savedTime;
+
+    // Save position periodically and before leaving
+    setInterval(function () {
+      if (!audio.paused) sessionStorage.setItem('ev_bgm_time', audio.currentTime);
+    }, 1000);
+    window.addEventListener('beforeunload', function () {
+      if (!audio.paused) sessionStorage.setItem('ev_bgm_time', audio.currentTime);
+    });
+
+    // Autoplay after first user interaction
+    function tryPlay() {
+      if (!STATE.soundEnabled) return;
+      audio.play().catch(function () {});
+    }
+
+    // Try immediately, then on first click/key
+    tryPlay();
+    document.addEventListener('click', function onFirstClick() {
+      tryPlay();
+      document.removeEventListener('click', onFirstClick);
+    });
+    document.addEventListener('keydown', function onFirstKey() {
+      tryPlay();
+      document.removeEventListener('keydown', onFirstKey);
+    });
+
+    // Respect sound toggle
+    var origToggle = window.toggleSound;
+    window.toggleSound = function () {
+      origToggle();
+      if (STATE.soundEnabled) {
+        tryPlay();
+      } else {
+        audio.pause();
+      }
+    };
+
+    window.evBgMusic = audio;
+  }
+
+  /* ==========================================================
      INIT
      ========================================================== */
   function init() {
@@ -576,6 +634,7 @@
     initTransitions();
     initHomeSections();
     initMagnetic();
+    initBgMusic();
 
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
       initScrollAnimations();
