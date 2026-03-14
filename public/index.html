@@ -14,16 +14,23 @@
 <style>
   body { overflow-x: hidden; }
 
-  /* Scroll snap for full-screen sections */
+  /* Hero takes full viewport, sections hidden until enter */
   .home-scroll {
-    scroll-snap-type: y mandatory;
     overflow-y: auto;
-    height: 100vh;
     scroll-behavior: smooth;
   }
 
-  .home-scroll > * {
-    scroll-snap-align: start;
+  .home-sections-wrap {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .home-sections-wrap.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   /* Hero cinematic */
@@ -159,8 +166,10 @@
     <p class="tagline anim-fade-up anim-delay-3">
       Games, tools, sounds &amp; more &mdash; built for vibes.
     </p>
-    <div class="scroll-hint anim-fade-up anim-delay-5">&#8595; Scroll to explore</div>
+    <button class="btn btn-primary magnetic anim-fade-up anim-delay-4" id="enterBtn" onclick="enterSite()" style="padding: 14px 40px; font-size: 16px; letter-spacing: 1px;">Enter</button>
   </section>
+
+  <div class="home-sections-wrap" id="homeSections">
 
   <!-- ======= MAIN SECTIONS (2x2 grid) ======= -->
   <div class="sections-grid">
@@ -252,10 +261,11 @@
   <!-- ======= FOOTER ======= -->
   <div class="home-footer-section">
     <div>
-      <p style="margin-bottom: 8px; font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Lounge</p>
-      <p>Made with care by Evan Cruz</p>
+      <p style="font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Lounge</p>
     </div>
   </div>
+
+  </div><!-- /home-sections-wrap -->
 
 </div>
 
@@ -266,8 +276,39 @@
 <!-- Engine -->
 <script src="/js/engine.js"></script>
 
-<!-- Homepage-specific: mouse tracking on section cards -->
+<!-- Homepage: enter animation + mouse tracking -->
 <script>
+function enterSite() {
+  var hero = document.querySelector('.home-hero');
+  var sections = document.getElementById('homeSections');
+  var enterBtn = document.getElementById('enterBtn');
+
+  if (typeof EvSound !== 'undefined') EvSound.play('whoosh');
+
+  // Fade hero out and up
+  gsap.to(hero, {
+    opacity: 0,
+    y: -60,
+    scale: 0.95,
+    duration: 0.7,
+    ease: 'power3.in',
+    onComplete: function() {
+      hero.style.display = 'none';
+      // Reveal sections
+      sections.classList.add('visible');
+      // Animate section cards in with stagger
+      gsap.from('.section-card', {
+        opacity: 0,
+        y: 50,
+        scale: 0.95,
+        stagger: 0.08,
+        duration: 0.6,
+        ease: 'power2.out'
+      });
+    }
+  });
+}
+
 (function() {
   // Track mouse position on section cards for radial glow
   document.querySelectorAll('.section-card, .card').forEach(function(el) {
