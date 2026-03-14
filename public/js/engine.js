@@ -1,27 +1,29 @@
 /* ============================================================
-   Evan's Lounge -- Interactive Engine
-   GSAP-powered animations, particles, synthesized sounds,
-   and cinematic page transitions.
+   Evan's Lounge -- Interactive Engine v2
+   Unseen-inspired: ink transitions, slide menu, typewriter sounds,
+   parallax background, hover flip animations.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  /* ---- Feature flags / state ---- */
-  const STATE = {
+  var STATE = {
     soundEnabled: localStorage.getItem('ep_sound') !== 'off',
     particlesInited: false,
     isTransitioning: false,
     lastHoverTime: 0,
+    lastTypeTime: 0,
+    menuOpen: false,
   };
 
-  const HOVER_COOLDOWN = 350; // ms between hover sounds
+  var HOVER_COOLDOWN = 350;
+  var TYPE_COOLDOWN = 60;
 
   /* ==========================================================
-     1. SOUND ENGINE  (Web Audio API)
+     1. SOUND ENGINE (Web Audio API)
      ========================================================== */
-  const Sound = (() => {
-    let ctx;
+  var Sound = (function () {
+    var ctx;
     function getCtx() {
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
       return ctx;
@@ -30,19 +32,17 @@
     function play(type) {
       if (!STATE.soundEnabled) return;
       try {
-        const c = getCtx();
+        var c = getCtx();
         if (c.state === 'suspended') c.resume();
+        var now = c.currentTime;
 
-        const now = c.currentTime;
         switch (type) {
           case 'hover': {
-            // Cooldown check
-            const t = Date.now();
+            var t = Date.now();
             if (t - STATE.lastHoverTime < HOVER_COOLDOWN) return;
             STATE.lastHoverTime = t;
-
-            const osc = c.createOscillator();
-            const gain = c.createGain();
+            var osc = c.createOscillator();
+            var gain = c.createGain();
             osc.connect(gain);
             gain.connect(c.destination);
             osc.type = 'sine';
@@ -55,77 +55,124 @@
             break;
           }
 
-          case 'click': {
-            // Soft thud / tap sound
-            const osc = c.createOscillator();
-            const gain = c.createGain();
-            osc.connect(gain);
-            gain.connect(c.destination);
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
-            gain.gain.setValueAtTime(0.06, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
+          case 'typewriter': {
+            var t2 = Date.now();
+            if (t2 - STATE.lastTypeTime < TYPE_COOLDOWN) return;
+            STATE.lastTypeTime = t2;
+            // Short mechanical click like a typewriter key
+            var bufLen = Math.floor(c.sampleRate * 0.03);
+            var buf = c.createBuffer(1, bufLen, c.sampleRate);
+            var data = buf.getChannelData(0);
+            for (var i = 0; i < bufLen; i++) {
+              data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 8);
+            }
+            var noise = c.createBufferSource();
+            noise.buffer = buf;
+            var hpf = c.createBiquadFilter();
+            hpf.type = 'highpass';
+            hpf.frequency.value = 2000;
+            var g = c.createGain();
+            g.gain.setValueAtTime(0.04, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+            noise.connect(hpf);
+            hpf.connect(g);
+            g.connect(c.destination);
+            noise.start(now);
+            noise.stop(now + 0.03);
             break;
           }
 
           case 'whoosh': {
-            const bufLen = c.sampleRate * 0.35;
-            const buf = c.createBuffer(1, bufLen, c.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufLen);
-            const noise = c.createBufferSource();
-            noise.buffer = buf;
-            const bpf = c.createBiquadFilter();
+            var bufLen2 = Math.floor(c.sampleRate * 0.35);
+            var buf2 = c.createBuffer(1, bufLen2, c.sampleRate);
+            var data2 = buf2.getChannelData(0);
+            for (var i2 = 0; i2 < bufLen2; i2++) data2[i2] = (Math.random() * 2 - 1) * (1 - i2 / bufLen2);
+            var noise2 = c.createBufferSource();
+            noise2.buffer = buf2;
+            var bpf = c.createBiquadFilter();
             bpf.type = 'bandpass';
             bpf.frequency.setValueAtTime(1000, now);
             bpf.frequency.exponentialRampToValueAtTime(4000, now + 0.15);
             bpf.frequency.exponentialRampToValueAtTime(800, now + 0.35);
             bpf.Q.value = 0.5;
-            const g = c.createGain();
-            g.gain.setValueAtTime(0.12, now);
-            g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-            noise.connect(bpf);
-            bpf.connect(g);
-            g.connect(c.destination);
-            noise.start(now);
-            noise.stop(now + 0.35);
+            var g2 = c.createGain();
+            g2.gain.setValueAtTime(0.12, now);
+            g2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            noise2.connect(bpf);
+            bpf.connect(g2);
+            g2.connect(c.destination);
+            noise2.start(now);
+            noise2.stop(now + 0.35);
             break;
           }
 
           case 'back': {
-            const osc = c.createOscillator();
-            const gain = c.createGain();
-            osc.connect(gain);
-            gain.connect(c.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
-            gain.gain.setValueAtTime(0.06, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
+            var osc2 = c.createOscillator();
+            var gain2 = c.createGain();
+            osc2.connect(gain2);
+            gain2.connect(c.destination);
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(400, now);
+            osc2.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+            gain2.gain.setValueAtTime(0.06, now);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc2.start(now);
+            osc2.stop(now + 0.2);
+            break;
+          }
+
+          case 'menu-open': {
+            var osc3 = c.createOscillator();
+            var gain3 = c.createGain();
+            osc3.connect(gain3);
+            gain3.connect(c.destination);
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(600, now);
+            osc3.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+            gain3.gain.setValueAtTime(0.03, now);
+            gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc3.start(now);
+            osc3.stop(now + 0.15);
+            break;
+          }
+
+          case 'menu-close': {
+            var osc4 = c.createOscillator();
+            var gain4 = c.createGain();
+            osc4.connect(gain4);
+            gain4.connect(c.destination);
+            osc4.type = 'sine';
+            osc4.frequency.setValueAtTime(900, now);
+            osc4.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+            gain4.gain.setValueAtTime(0.03, now);
+            gain4.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc4.start(now);
+            osc4.stop(now + 0.12);
             break;
           }
         }
       } catch (e) { /* silent fail */ }
     }
 
-    return { play };
+    return { play: play };
   })();
 
   window.EvSound = Sound;
 
   /* ==========================================================
-     2. HOVER SOUND on interactive elements (with cooldown)
+     2. HOVER & TYPEWRITER SOUNDS
      ========================================================== */
   function initHoverSounds() {
-    const interactiveSelector = 'a, button, .card, .section-card, [data-hover]';
-
-    document.addEventListener('mouseover', (e) => {
-      if (e.target.closest(interactiveSelector)) {
+    document.addEventListener('mouseover', function (e) {
+      // Typewriter sound for small buttons (btn, section-cta, etc)
+      var smallBtn = e.target.closest('.btn, .section-cta, .tool-tab, .timer-preset, .back-btn');
+      if (smallBtn) {
+        Sound.play('typewriter');
+        return;
+      }
+      // Regular hover sound for larger interactive elements
+      var interactive = e.target.closest('.slide-menu-link, .card, .section-card, [data-hover]');
+      if (interactive) {
         Sound.play('hover');
       }
     });
@@ -135,17 +182,17 @@
      3. PARTICLE BACKGROUND (Canvas)
      ========================================================== */
   function initParticles() {
-    const canvas = document.getElementById('ev-particles');
+    var canvas = document.getElementById('ev-particles');
     if (!canvas || STATE.particlesInited) return;
     STATE.particlesInited = true;
 
-    const ctx2d = canvas.getContext('2d');
-    let W, H;
-    let particles = [];
-    let mouse = { x: -9999, y: -9999 };
-    const PARTICLE_COUNT = Math.min(80, Math.floor(window.innerWidth / 18));
-    const CONNECT_DIST = 140;
-    const MOUSE_RADIUS = 160;
+    var ctx2d = canvas.getContext('2d');
+    var W, H;
+    var particles = [];
+    var mouse = { x: -9999, y: -9999 };
+    var PARTICLE_COUNT = Math.min(80, Math.floor(window.innerWidth / 18));
+    var CONNECT_DIST = 140;
+    var MOUSE_RADIUS = 160;
 
     function resize() {
       W = canvas.width = window.innerWidth;
@@ -154,16 +201,16 @@
     resize();
     window.addEventListener('resize', resize);
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', function (e) {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     });
-    document.addEventListener('mouseleave', () => {
+    document.addEventListener('mouseleave', function () {
       mouse.x = -9999;
       mouse.y = -9999;
     });
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (var i = 0; i < PARTICLE_COUNT; i++) {
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
@@ -176,27 +223,23 @@
 
     function draw() {
       ctx2d.clearRect(0, 0, W, H);
+      var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c8db5';
+      var rgb = hexToRgb(accent);
 
-      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c8db5';
-      const rgb = hexToRgb(accent);
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        var dx = p.x - mouse.x;
+        var dy = p.y - mouse.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < MOUSE_RADIUS && dist > 0) {
-          const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+          var force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
           p.vx += (dx / dist) * force * 0.3;
           p.vy += (dy / dist) * force * 0.3;
         }
-
         p.vx *= 0.98;
         p.vy *= 0.98;
         p.x += p.vx;
         p.y += p.vy;
-
         if (p.x < 0) p.x = W;
         if (p.x > W) p.x = 0;
         if (p.y < 0) p.y = H;
@@ -204,25 +247,24 @@
 
         ctx2d.beginPath();
         ctx2d.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx2d.fillStyle = `rgba(${rgb}, ${p.alpha})`;
+        ctx2d.fillStyle = 'rgba(' + rgb + ', ' + p.alpha + ')';
         ctx2d.fill();
 
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const ddx = p.x - p2.x;
-          const ddy = p.y - p2.y;
-          const d = Math.sqrt(ddx * ddx + ddy * ddy);
+        for (var j = i + 1; j < particles.length; j++) {
+          var p2 = particles[j];
+          var ddx = p.x - p2.x;
+          var ddy = p.y - p2.y;
+          var d = Math.sqrt(ddx * ddx + ddy * ddy);
           if (d < CONNECT_DIST) {
             ctx2d.beginPath();
             ctx2d.moveTo(p.x, p.y);
             ctx2d.lineTo(p2.x, p2.y);
-            ctx2d.strokeStyle = `rgba(${rgb}, ${0.08 * (1 - d / CONNECT_DIST)})`;
+            ctx2d.strokeStyle = 'rgba(' + rgb + ', ' + (0.08 * (1 - d / CONNECT_DIST)) + ')';
             ctx2d.lineWidth = 0.6;
             ctx2d.stroke();
           }
         }
       }
-
       requestAnimationFrame(draw);
     }
     draw();
@@ -230,116 +272,250 @@
 
   function hexToRgb(hex) {
     hex = hex.replace('#', '');
-    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-    const n = parseInt(hex, 16);
-    return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    var n = parseInt(hex, 16);
+    return ((n >> 16) & 255) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255);
   }
 
   /* ==========================================================
-     4. PAGE TRANSITIONS  (GSAP-powered zoom/fade)
+     4. BACKGROUND PARALLAX (follows cursor)
+     ========================================================== */
+  function initParallaxBg() {
+    // Move body::before/::after gradient orbs with cursor
+    document.addEventListener('mousemove', function (e) {
+      var x = (e.clientX / window.innerWidth - 0.5) * 2;
+      var y = (e.clientY / window.innerHeight - 0.5) * 2;
+
+      // Move canvas + gradient orbs subtly
+      var canvas = document.getElementById('ev-particles');
+      if (canvas && typeof gsap !== 'undefined') {
+        gsap.to(canvas, {
+          x: x * -15,
+          y: y * -10,
+          duration: 1.2,
+          ease: 'power2.out',
+        });
+      }
+
+      // Shift the body pseudo-element gradient orbs via CSS vars
+      document.body.style.setProperty('--parallax-x', (x * 30) + 'px');
+      document.body.style.setProperty('--parallax-y', (y * 20) + 'px');
+    });
+  }
+
+  /* ==========================================================
+     5. INK BLEED PAGE TRANSITION
+     ========================================================== */
+  function createInkOverlay() {
+    // Create the SVG ink bleed overlay if it doesn't exist
+    if (document.getElementById('ink-transition')) return;
+
+    var div = document.createElement('div');
+    div.id = 'ink-transition';
+    div.className = 'ink-transition';
+    div.innerHTML = '<svg viewBox="0 0 1440 900" preserveAspectRatio="none">' +
+      '<path class="ink-shape" d="M0 900 L0 900 L1440 900 L1440 900 Z"/>' +
+      '</svg>';
+    document.body.appendChild(div);
+  }
+
+  function playInkTransition(href) {
+    if (typeof gsap === 'undefined') {
+      window.location.href = href;
+      return;
+    }
+
+    createInkOverlay();
+    var shape = document.querySelector('.ink-shape');
+    if (!shape) {
+      window.location.href = href;
+      return;
+    }
+
+    Sound.play('whoosh');
+
+    // Ink blob expands from bottom, covering the screen organically
+    var tl = gsap.timeline({
+      onComplete: function () {
+        window.location.href = href;
+      }
+    });
+
+    // Animate SVG path from nothing to full coverage with organic blob shape
+    tl.to(shape, {
+      attr: {
+        d: 'M0 900 L0 400 Q120 280 240 350 Q360 180 480 300 Q600 100 720 250 Q840 80 960 200 Q1080 50 1200 180 Q1320 100 1440 150 L1440 900 Z'
+      },
+      duration: 0.3,
+      ease: 'power2.in',
+    })
+    .to(shape, {
+      attr: {
+        d: 'M0 900 L0 0 Q120 50 240 0 Q360 30 480 0 Q600 40 720 0 Q840 20 960 0 Q1080 30 1200 0 Q1320 10 1440 0 L1440 900 Z'
+      },
+      duration: 0.35,
+      ease: 'power3.inOut',
+    });
+  }
+
+  function playInkReveal() {
+    if (typeof gsap === 'undefined') return;
+
+    createInkOverlay();
+    var shape = document.querySelector('.ink-shape');
+    if (!shape) return;
+
+    // Start fully covered
+    gsap.set(shape, {
+      attr: {
+        d: 'M0 900 L0 0 L1440 0 L1440 900 Z'
+      }
+    });
+
+    // Reveal: ink recedes upward with organic edge
+    var tl = gsap.timeline();
+    tl.to(shape, {
+      attr: {
+        d: 'M0 900 L0 -100 Q120 -50 240 -100 Q360 -80 480 -100 Q600 -60 720 -100 Q840 -70 960 -100 Q1080 -50 1200 -100 Q1320 -80 1440 -100 L1440 900 Z'
+      },
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.1,
+    })
+    .set(shape, {
+      attr: {
+        d: 'M0 900 L0 900 L1440 900 L1440 900 Z'
+      }
+    });
+  }
+
+  /* ==========================================================
+     6. PAGE TRANSITIONS (ink bleed + slide)
      ========================================================== */
   function initTransitions() {
     if (typeof gsap === 'undefined') return;
 
-    const wrapper = document.querySelector('.page-transition-wrapper');
-    if (!wrapper) return;
+    var wrapper = document.querySelector('.page-transition-wrapper');
 
-    // --- Enter animation ---
-    const transData = sessionStorage.getItem('ev_transition');
+    // --- Enter animation: ink reveal + content slide in ---
+    var transData = sessionStorage.getItem('ev_transition');
     if (transData) {
       sessionStorage.removeItem('ev_transition');
-      const data = JSON.parse(transData);
 
-      // Start hidden to prevent flicker
-      gsap.set(wrapper, { opacity: 0 });
-
-      if (data.type === 'zoom-in') {
-        gsap.set(wrapper, { scale: 0.92, transformOrigin: 'center center' });
+      if (wrapper) {
+        gsap.set(wrapper, { opacity: 0, x: 60 });
+        playInkReveal();
         gsap.to(wrapper, {
-          scale: 1,
           opacity: 1,
-          duration: 0.6,
+          x: 0,
+          duration: 0.7,
           ease: 'power2.out',
-          delay: 0.05,
+          delay: 0.3,
         });
-      } else if (data.type === 'zoom-out') {
-        gsap.set(wrapper, { scale: 1.08 });
-        gsap.to(wrapper, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-          delay: 0.05,
-        });
+      } else {
+        playInkReveal();
       }
-    } else {
-      // Default page-load animation
-      gsap.set(wrapper, { opacity: 0 });
+    } else if (wrapper) {
+      // Default page-load: slide in from right
+      gsap.set(wrapper, { opacity: 0, x: 40 });
       gsap.to(wrapper, {
         opacity: 1,
-        y: 0,
-        duration: 0.5,
+        x: 0,
+        duration: 0.6,
         ease: 'power2.out',
         delay: 0.05,
       });
     }
 
-    // --- Intercept navigation links for zoom transition ---
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('a[href]');
+    // --- Intercept navigation links ---
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('a[href]');
       if (!link) return;
 
-      const href = link.getAttribute('href');
+      var href = link.getAttribute('href');
       if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto') || href.startsWith('javascript')) return;
       if (link.target === '_blank') return;
       if (STATE.isTransitioning) { e.preventDefault(); return; }
 
       e.preventDefault();
       STATE.isTransitioning = true;
-      Sound.play('whoosh');
 
-      const isBack = link.classList.contains('back-btn') || link.dataset.transition === 'back';
-      const transType = isBack ? 'zoom-out' : 'zoom-in';
+      sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'ink' }));
 
-      sessionStorage.setItem('ev_transition', JSON.stringify({ type: transType }));
-
-      const tl = gsap.timeline({
-        onComplete: () => { window.location.href = href; },
-      });
-
-      if (isBack) {
-        Sound.play('back');
-        tl.to(wrapper, {
-          scale: 0.92,
+      // Slide current content out to the left while ink covers
+      if (wrapper) {
+        gsap.to(wrapper, {
           opacity: 0,
-          duration: 0.4,
-          ease: 'power2.in',
-        });
-      } else {
-        tl.to(wrapper, {
-          scale: 1.05,
-          opacity: 0,
+          x: -60,
           duration: 0.4,
           ease: 'power2.in',
         });
       }
+
+      playInkTransition(href);
     });
   }
 
   /* ==========================================================
-     5. HOMEPAGE FULL-SCREEN SECTIONS
+     7. SLIDE-OUT MENU
+     ========================================================== */
+  function initSlideMenu() {
+    var trigger = document.querySelector('.menu-trigger');
+    var menu = document.querySelector('.slide-menu');
+    var overlay = document.querySelector('.slide-menu-overlay');
+    if (!trigger || !menu) return;
+
+    function toggleMenu() {
+      STATE.menuOpen = !STATE.menuOpen;
+      trigger.classList.toggle('active', STATE.menuOpen);
+      menu.classList.toggle('open', STATE.menuOpen);
+      if (overlay) overlay.classList.toggle('open', STATE.menuOpen);
+
+      Sound.play(STATE.menuOpen ? 'menu-open' : 'menu-close');
+
+      // Stagger animate menu items in
+      if (STATE.menuOpen && typeof gsap !== 'undefined') {
+        var items = menu.querySelectorAll('.slide-menu-item');
+        gsap.from(items, {
+          x: 60,
+          opacity: 0,
+          stagger: 0.06,
+          duration: 0.5,
+          ease: 'power2.out',
+          delay: 0.15,
+        });
+      }
+    }
+
+    trigger.addEventListener('click', toggleMenu);
+    if (overlay) {
+      overlay.addEventListener('click', function () {
+        if (STATE.menuOpen) toggleMenu();
+      });
+    }
+
+    // Close on escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && STATE.menuOpen) toggleMenu();
+    });
+
+    window.toggleSlideMenu = toggleMenu;
+  }
+
+  /* ==========================================================
+     8. HOMEPAGE FULL-SCREEN SECTIONS
      ========================================================== */
   function initHomeSections() {
-    const sections = document.querySelectorAll('.section-card');
+    var sections = document.querySelectorAll('.section-card');
     if (!sections.length || typeof gsap === 'undefined') return;
 
-    // Parallax on mouse move
-    document.addEventListener('mousemove', (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    // Parallax on mouse move for section content
+    document.addEventListener('mousemove', function (e) {
+      var x = (e.clientX / window.innerWidth - 0.5) * 2;
+      var y = (e.clientY / window.innerHeight - 0.5) * 2;
 
-      sections.forEach((sec) => {
-        const inner = sec.querySelector('.section-inner');
+      sections.forEach(function (sec) {
+        var inner = sec.querySelector('.section-inner');
         if (inner) {
           gsap.to(inner, {
             x: x * 12,
@@ -348,7 +524,7 @@
             ease: 'power2.out',
           });
         }
-        const bg = sec.querySelector('.section-bg-text');
+        var bg = sec.querySelector('.section-bg-text');
         if (bg) {
           gsap.to(bg, {
             x: x * -20,
@@ -360,47 +536,46 @@
       });
     });
 
-    // Zoom-in click on section cards
-    sections.forEach((sec) => {
-      const href = sec.dataset.href;
+    // Click on section cards - ink transition
+    sections.forEach(function (sec) {
+      var href = sec.dataset.href;
       if (!href) return;
 
-      sec.addEventListener('click', (e) => {
+      sec.addEventListener('click', function (e) {
         if (STATE.isTransitioning) return;
         e.preventDefault();
         STATE.isTransitioning = true;
 
-        Sound.play('click');
         Sound.play('whoosh');
+        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'ink' }));
 
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'zoom-in' }));
-
-        const rect = sec.getBoundingClientRect();
-        const ox = rect.left + rect.width / 2;
-        const oy = rect.top + rect.height / 2;
-
-        const wrapper = document.querySelector('.home-wrapper') || document.body;
+        // Zoom into the card while ink covers
+        var wrapper = document.querySelector('.home-wrapper') || document.body;
+        var rect = sec.getBoundingClientRect();
+        var ox = rect.left + rect.width / 2;
+        var oy = rect.top + rect.height / 2;
 
         gsap.to(wrapper, {
-          scale: 1.5,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power3.in',
-          transformOrigin: `${ox}px ${oy}px`,
-          onComplete: () => { window.location.href = href; },
+          scale: 1.1,
+          opacity: 0.5,
+          duration: 0.5,
+          ease: 'power2.in',
+          transformOrigin: ox + 'px ' + oy + 'px',
         });
+
+        playInkTransition(href);
       });
     });
   }
 
   /* ==========================================================
-     6. SCROLL ANIMATIONS (GSAP ScrollTrigger)
+     9. SCROLL ANIMATIONS (GSAP ScrollTrigger)
      ========================================================== */
   function initScrollAnimations() {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger);
 
-    gsap.utils.toArray('.gsap-reveal').forEach((el) => {
+    gsap.utils.toArray('.gsap-reveal').forEach(function (el) {
       gsap.from(el, {
         scrollTrigger: { trigger: el, start: 'top 85%', once: true },
         opacity: 0,
@@ -410,8 +585,8 @@
       });
     });
 
-    gsap.utils.toArray('.gsap-stagger-parent').forEach((parent) => {
-      const children = parent.querySelectorAll('.gsap-stagger');
+    gsap.utils.toArray('.gsap-stagger-parent').forEach(function (parent) {
+      var children = parent.querySelectorAll('.gsap-stagger');
       gsap.from(children, {
         scrollTrigger: { trigger: parent, start: 'top 80%', once: true },
         opacity: 0,
@@ -424,27 +599,27 @@
   }
 
   /* ==========================================================
-     7. MAGNETIC BUTTONS
+     10. MAGNETIC BUTTONS
      ========================================================== */
   function initMagnetic() {
     if (window.innerWidth < 768) return;
 
-    document.querySelectorAll('.magnetic').forEach((btn) => {
-      btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
+    document.querySelectorAll('.magnetic').forEach(function (btn) {
+      btn.addEventListener('mousemove', function (e) {
+        var rect = btn.getBoundingClientRect();
+        var x = e.clientX - rect.left - rect.width / 2;
+        var y = e.clientY - rect.top - rect.height / 2;
         gsap.to(btn, { x: x * 0.25, y: y * 0.25, duration: 0.3, ease: 'power2.out' });
       });
 
-      btn.addEventListener('mouseleave', () => {
+      btn.addEventListener('mouseleave', function () {
         gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
       });
     });
   }
 
   /* ==========================================================
-     8. THEME (always dark, no toggle)
+     11. THEME (always dark)
      ========================================================== */
   function initTheme() {
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -454,9 +629,11 @@
   window.toggleSound = function () {
     STATE.soundEnabled = !STATE.soundEnabled;
     localStorage.setItem('ep_sound', STATE.soundEnabled ? 'on' : 'off');
-    if (STATE.soundEnabled) Sound.play('click');
-    const btn = document.querySelector('.sound-toggle');
-    if (btn) btn.textContent = STATE.soundEnabled ? 'Sound On' : 'Sound Off';
+    if (STATE.soundEnabled) Sound.play('typewriter');
+    var btns = document.querySelectorAll('.sound-toggle');
+    btns.forEach(function (btn) {
+      btn.textContent = STATE.soundEnabled ? 'Sound On' : 'Sound Off';
+    });
   };
 
   /* ==========================================================
@@ -466,6 +643,8 @@
     initTheme();
     initHoverSounds();
     initParticles();
+    initParallaxBg();
+    initSlideMenu();
     initTransitions();
     initHomeSections();
     initMagnetic();
@@ -476,8 +655,10 @@
       window.addEventListener('load', initScrollAnimations);
     }
 
-    const soundBtn = document.querySelector('.sound-toggle');
-    if (soundBtn) soundBtn.textContent = STATE.soundEnabled ? 'Sound On' : 'Sound Off';
+    var soundBtns = document.querySelectorAll('.sound-toggle');
+    soundBtns.forEach(function (btn) {
+      btn.textContent = STATE.soundEnabled ? 'Sound On' : 'Sound Off';
+    });
   }
 
   if (document.readyState === 'loading') {
