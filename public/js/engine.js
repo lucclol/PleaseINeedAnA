@@ -569,9 +569,10 @@
     if (window.location.pathname.indexOf('rhythm') !== -1) return;
 
     var audio = document.createElement('audio');
+    var TARGET_VOL = 0.15;
     audio.id = 'ev-bg-music';
     audio.loop = true;
-    audio.volume = 0.15;
+    audio.volume = 0;
     audio.preload = 'auto';
     audio.src = '/background.mp3';
     document.body.appendChild(audio);
@@ -579,6 +580,17 @@
     // Restore position from previous page
     var savedTime = parseFloat(sessionStorage.getItem('ev_bgm_time') || '0');
     if (savedTime > 0) audio.currentTime = savedTime;
+
+    // Fade in smoothly to avoid jitter on page switch
+    function fadeIn() {
+      var vol = 0;
+      var step = TARGET_VOL / 20; // 20 steps over ~400ms
+      var iv = setInterval(function () {
+        vol += step;
+        if (vol >= TARGET_VOL) { audio.volume = TARGET_VOL; clearInterval(iv); }
+        else { audio.volume = vol; }
+      }, 20);
+    }
 
     // Save position periodically and before leaving
     setInterval(function () {
@@ -591,7 +603,7 @@
     // Autoplay after first user interaction
     function tryPlay() {
       if (!STATE.soundEnabled) return;
-      audio.play().catch(function () {});
+      audio.play().then(function () { fadeIn(); }).catch(function () {});
     }
 
     // Try immediately, then on first click/key
