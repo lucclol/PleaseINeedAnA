@@ -133,7 +133,7 @@
 
 <div class="start-screen" id="startScreen">
   <h1>RHYTHM GAME</h1>
-  <div class="tagline">Voice-controlled rhythm game</div>
+  <div class="tagline">Beat-synced &bull; Voice + Keyboard</div>
   <button class="start-btn" id="startBtn">START</button>
   <div class="start-instructions">
     Say <strong>"LEFT"</strong> &nbsp; <strong>"DOWN"</strong> &nbsp; <strong>"UP"</strong> &nbsp; <strong>"RIGHT"</strong> &nbsp; when arrows enter the zone<br>
@@ -176,49 +176,212 @@
 <div class="voice-indicator"><div class="mic-dot" id="micDot"></div><span id="micLabel">MIC OFF</span></div>
 <div class="kb-hint">&#x2190;&#xFE0E; &#x2193;&#xFE0E; &#x2191;&#xFE0E; &#x2192;&#xFE0E; / D F J K</div>
 
-<audio id="bgMusic" preload="auto"><source src="../music.mp3" type="audio/mpeg"></audio>
+<audio id="bgMusic" preload="auto"><source src="/in-the-pool.mp3" type="audio/mpeg"></audio>
+
+<div id="analyzeOverlay" style="position:fixed;inset:0;background:rgba(8,8,15,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:600;font-family:'Orbitron',monospace;color:#fff;text-align:center;">
+  <div style="font-size:clamp(16px,3vw,24px);letter-spacing:4px;margin-bottom:20px;" id="analyzeText">ANALYZING BEATS...</div>
+  <div style="width:200px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+    <div id="analyzeBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--left),var(--up));transition:width 0.3s;"></div>
+  </div>
+</div>
 
 <script>
-const SONG_DURATION = 60000;
+/* ============================================================
+   RHYTHM GAME -- Beat-synced via Web Audio API analysis
+   ============================================================ */
+
 const FADE_DURATION = 3000;
-const BPM = 120;
-const BEAT = 60000 / BPM;
 
 const state = {
   running:false, score:0, combo:0, maxCombo:0,
   perfect:0, good:0, miss:0, arrows:[], speed:3.0,
   spawnIndex:0, songPattern:[], lastFrame:0, startTime:0, songLength:0,
-  fading:false,
+  fading:false, audioCtx:null, sourceNode:null, songDuration:0,
 };
 const arrowChars = {left:'\u25C0\uFE0E',down:'\u25BC\uFE0E',up:'\u25B2\uFE0E',right:'\u25B6\uFE0E'};
+const dirs = ['left','down','up','right'];
 const lanes = {};
 const $ = id => document.getElementById(id);
 const music = $('bgMusic');
 document.querySelectorAll('.lane').forEach(l=>{lanes[l.dataset.dir]=l;});
 
-function generateSong() {
-  const p = [];
-  let t = 2500;
-  const endTime = SONG_DURATION - 3000;
-  const patterns = [
-    ['left','right'],['up','down'],['down','up'],['right','left'],
-    ['left','down','right'],['right','up','left'],['up','down','up'],['down','left','down'],
-    ['left','right','left','right'],['up','down','up','down'],
-    ['left','down','up','right'],['right','up','down','left'],
-    ['left'],['down'],['up'],['right'],
-    ['down','down','up','up'],['left','left','right','right'],
-    ['up','right','down','left'],['right','down','left','up'],
-  ];
-  let pi = 0;
-  while (t < endTime) {
-    const seq = patterns[pi % patterns.length]; pi++;
-    for (const dir of seq) { if (t >= endTime) break; p.push({time:t,dir}); t += BEAT; }
-    t += BEAT * 1.5;
+/* ----------------------------------------------------------
+   BEAT DETECTION: Offline analysis of the audio file
+   Analyzes energy peaks in frequency sub-bands to find beats
+   ---------------------------------------------------------- */
+async function analyzeBeats() {
+  $('analyzeOverlay').style.display = 'flex';
+  $('analyzeText').textContent = 'LOADING AUDIO...';
+  $('analyzeBar').style.width = '10%';
+
+  // Fetch the audio file as ArrayBuffer
+  const response = await fetch('/in-the-pool.mp3');
+  const arrayBuffer = await response.arrayBuffer();
+
+  $('analyzeText').textContent = 'DECODING...';
+  $('analyzeBar').style.width = '30%';
+
+  // Decode offline
+  const offCtx = new OfflineAudioContext(1, 1, 44100);
+  const audioBuffer = await offCtx.decodeAudioData(arrayBuffer);
+  state.songDuration = audioBuffer.duration * 1000; // ms
+
+  $('analyzeText').textContent = 'ANALYZING BEATS...';
+  $('analyzeBar').style.width = '50%';
+
+  // Get raw PCM data (mono)
+  const rawData = audioBuffer.getChannelData(0);
+  const sampleRate = audioBuffer.sampleRate;
+
+  // Split into small windows and compute energy
+  const windowSize = Math.floor(sampleRate * 0.02); // 20ms windows
+  const hopSize = Math.floor(windowSize / 2);        // 50% overlap
+  const numWindows = Math.floor((rawData.length - windowSize) / hopSize);
+
+  // Compute energy for 4 frequency bands using simple bandpass
+  // Band 0 (kick/bass): 20-150 Hz -> left
+  // Band 1 (low-mid): 150-400 Hz -> down
+  // Band 2 (mid): 400-2000 Hz -> up
+  // Band 3 (hi-hat/treble): 2000-8000 Hz -> right
+  const bandEnergies = [[], [], [], []];
+  const bandFreqs = [[20, 150], [150, 400], [400, 2000], [2000, 8000]];
+
+  // Use FFT-like approach: compute energy in frequency bands per window
+  const fftSize = 2048;
+
+  for (let w = 0; w < numWindows; w++) {
+    const start = w * hopSize;
+    const chunk = rawData.slice(start, start + fftSize < rawData.length ? start + fftSize : rawData.length);
+    if (chunk.length < fftSize) break;
+
+    // Simple energy calculation per band using DFT on key frequencies
+    for (let b = 0; b < 4; b++) {
+      const fLow = bandFreqs[b][0];
+      const fHigh = bandFreqs[b][1];
+      let energy = 0;
+      // Sample a few frequencies in the band
+      const numFreqs = 8;
+      for (let fi = 0; fi < numFreqs; fi++) {
+        const freq = fLow + (fHigh - fLow) * fi / numFreqs;
+        const binIndex = Math.round(freq * fftSize / sampleRate);
+        // Goertzel-like: compute magnitude at this frequency
+        let real = 0, imag = 0;
+        const w0 = 2 * Math.PI * binIndex / fftSize;
+        for (let n = 0; n < fftSize; n++) {
+          real += chunk[n] * Math.cos(w0 * n);
+          imag -= chunk[n] * Math.sin(w0 * n);
+        }
+        energy += Math.sqrt(real * real + imag * imag);
+      }
+      bandEnergies[b].push(energy / numFreqs);
+    }
+
+    // Update progress
+    if (w % 500 === 0) {
+      const pct = 50 + (w / numWindows) * 40;
+      $('analyzeBar').style.width = pct + '%';
+    }
   }
-  state.songPattern = p;
-  state.songLength = SONG_DURATION + FADE_DURATION + 2000;
+
+  $('analyzeText').textContent = 'MAPPING BEATS...';
+  $('analyzeBar').style.width = '92%';
+
+  // Detect peaks in each band
+  const beats = [];
+  const minGapMs = 180; // Minimum gap between beats in same band
+
+  for (let b = 0; b < 4; b++) {
+    const energies = bandEnergies[b];
+    if (energies.length === 0) continue;
+
+    // Compute local average energy (sliding window)
+    const avgWindow = 40; // ~400ms context window
+    let lastBeatTime = -9999;
+
+    for (let i = avgWindow; i < energies.length - 1; i++) {
+      // Local average
+      let localAvg = 0;
+      for (let j = i - avgWindow; j < i; j++) localAvg += energies[j];
+      localAvg /= avgWindow;
+
+      // Peak detection: energy must exceed local average by threshold
+      const threshold = 1.4 + (b === 0 ? 0.1 : 0); // Slightly higher threshold for bass
+      if (energies[i] > localAvg * threshold && energies[i] > energies[i - 1] && energies[i] >= energies[i + 1]) {
+        const timeMs = (i * hopSize / sampleRate) * 1000;
+        if (timeMs - lastBeatTime >= minGapMs && timeMs > 1000 && timeMs < state.songDuration - 2000) {
+          beats.push({ time: timeMs, dir: dirs[b], energy: energies[i] / (localAvg || 1) });
+          lastBeatTime = timeMs;
+        }
+      }
+    }
+  }
+
+  // Sort by time
+  beats.sort((a, b) => a.time - b.time);
+
+  // If too many beats, keep the strongest ones (cap at ~3 per second)
+  const maxBeats = Math.floor(state.songDuration / 1000 * 3);
+  let finalBeats = beats;
+  if (beats.length > maxBeats) {
+    // Sort by energy, keep top maxBeats, then re-sort by time
+    beats.sort((a, b) => b.energy - a.energy);
+    finalBeats = beats.slice(0, maxBeats);
+    finalBeats.sort((a, b) => a.time - b.time);
+  }
+
+  // If too few beats detected, this means the analysis was too strict - lower threshold
+  if (finalBeats.length < 30) {
+    // Fallback: use simple overall energy peak detection
+    const overallEnergy = [];
+    for (let w = 0; w < numWindows; w++) {
+      let e = 0;
+      for (let b = 0; b < 4; b++) {
+        if (w < bandEnergies[b].length) e += bandEnergies[b][w];
+      }
+      overallEnergy.push(e);
+    }
+    finalBeats = [];
+    const oAvgWindow = 30;
+    let lastT = -9999;
+    for (let i = oAvgWindow; i < overallEnergy.length - 1; i++) {
+      let avg = 0;
+      for (let j = i - oAvgWindow; j < i; j++) avg += overallEnergy[j];
+      avg /= oAvgWindow;
+      if (overallEnergy[i] > avg * 1.2 && overallEnergy[i] > overallEnergy[i - 1] && overallEnergy[i] >= overallEnergy[i + 1]) {
+        const timeMs = (i * hopSize / sampleRate) * 1000;
+        if (timeMs - lastT >= minGapMs && timeMs > 1000 && timeMs < state.songDuration - 2000) {
+          finalBeats.push({ time: timeMs, dir: dirs[Math.floor(Math.random() * 4)], energy: overallEnergy[i] / (avg || 1) });
+          lastT = timeMs;
+        }
+      }
+    }
+  }
+
+  // Ensure no two beats at the exact same time have the same direction
+  for (let i = 1; i < finalBeats.length; i++) {
+    if (Math.abs(finalBeats[i].time - finalBeats[i - 1].time) < 50 && finalBeats[i].dir === finalBeats[i - 1].dir) {
+      // Shift to next available direction
+      const used = new Set();
+      used.add(finalBeats[i - 1].dir);
+      for (const d of dirs) {
+        if (!used.has(d)) { finalBeats[i].dir = d; break; }
+      }
+    }
+  }
+
+  state.songPattern = finalBeats;
+  state.songLength = state.songDuration + FADE_DURATION + 1000;
+
+  $('analyzeText').textContent = 'READY! ' + finalBeats.length + ' BEATS DETECTED';
+  $('analyzeBar').style.width = '100%';
+
+  await new Promise(r => setTimeout(r, 600));
+  $('analyzeOverlay').style.display = 'none';
 }
 
+/* ----------------------------------------------------------
+   GAME MECHANICS (preserved from original)
+   ---------------------------------------------------------- */
 function spawnArrow(dir) {
   const el = document.createElement('div');
   el.className = 'arrow'; el.textContent = arrowChars[dir];
@@ -237,8 +400,9 @@ function update(ts) {
   const hitY = getHitY();
   const slowZoneStart = hitY - 100;
 
-  $('progressBar').style.width = Math.min(elapsed / (SONG_DURATION + FADE_DURATION), 1) * 100 + '%';
+  $('progressBar').style.width = Math.min(elapsed / state.songDuration, 1) * 100 + '%';
 
+  // Spawn arrows ahead of their beat time so they arrive at hit zone on time
   while (state.spawnIndex < state.songPattern.length) {
     const n = state.songPattern[state.spawnIndex];
     const travelTime = (hitY + 80) / state.speed * 16.67;
@@ -272,7 +436,7 @@ function update(ts) {
     }
   }
 
-  if (elapsed >= SONG_DURATION && !state.fading) { state.fading = true; fadeOutMusic(); }
+  if (elapsed >= state.songDuration && !state.fading) { state.fading = true; fadeOutMusic(); }
   if (elapsed > state.songLength && state.arrows.every(a => a.hit)) { endGame(); return; }
   requestAnimationFrame(update);
 }
@@ -347,7 +511,10 @@ function updateHUD() {
   $('hud-streak').textContent = state.maxCombo;
 }
 
-function playMusic() { music.currentTime = 0; music.volume = 0.7; music.play().catch(e => console.log('Audio blocked:', e)); }
+function playMusic() {
+  music.currentTime = 0; music.volume = 0.7;
+  music.play().catch(e => console.log('Audio blocked:', e));
+}
 function fadeOutMusic() {
   const sv = music.volume, steps = 30, iv = FADE_DURATION / steps;
   let s = 0;
@@ -355,6 +522,9 @@ function fadeOutMusic() {
 }
 function stopMusic() { music.pause(); music.currentTime = 0; music.volume = 0.7; }
 
+/* ----------------------------------------------------------
+   VOICE CONTROL
+   ---------------------------------------------------------- */
 let recognition = null, processedIdx = -1;
 function startVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -402,12 +572,24 @@ document.addEventListener('keydown', e => {
   const d = k[e.key]; if (d) { e.preventDefault(); tryHit(d); showVoice(d.toUpperCase()); }
 });
 
-function startGame() {
+/* ----------------------------------------------------------
+   START / END GAME
+   ---------------------------------------------------------- */
+async function startGame() {
   Object.assign(state, {score:0,combo:0,maxCombo:0,perfect:0,good:0,miss:0,arrows:[],spawnIndex:0,lastFrame:0,fading:false});
   document.querySelectorAll('.arrow').forEach(el => el.remove());
   document.querySelectorAll('.particle-container').forEach(el => el.remove());
   $('progressBar').style.width = '0%';
-  generateSong(); updateHUD();
+
+  // Pause site background music if it exists
+  if (window.evBgMusic) { window.evBgMusic.pause(); }
+
+  // Analyze beats from the actual audio (first time or re-analyze)
+  if (state.songPattern.length === 0) {
+    await analyzeBeats();
+  }
+
+  updateHUD();
   $('startScreen').classList.add('hidden'); $('gameOver').classList.remove('show');
   state.running = true; state.startTime = performance.now();
   playMusic(); startVoice(); requestAnimationFrame(update);
@@ -438,6 +620,11 @@ function endGame() {
   log.push({ text: 'Played Rhythm Game - Score: ' + state.score + ' (Grade: ' + g.textContent + ')', time: new Date().toISOString() });
   if (log.length > 50) log.splice(0, log.length - 50);
   localStorage.setItem('ep_activity', JSON.stringify(log));
+
+  // Resume site background music
+  if (window.evBgMusic) {
+    try { window.evBgMusic.play(); } catch(e) {}
+  }
 }
 
 $('startBtn').addEventListener('click', startGame);
