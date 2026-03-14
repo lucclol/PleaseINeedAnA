@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
-<script>
-  var t = localStorage.getItem('ep_theme');
-  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  else { document.documentElement.setAttribute('data-theme', 'dark'); }
-</script>
+<script>document.documentElement.setAttribute('data-theme', 'dark');</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
   .dash-hero {
@@ -117,14 +113,11 @@
       <li><a href="/dashboard.html" class="active">Dashboard</a></li>
       <li><a href="/games.html">Games</a></li>
       <li><a href="/tools.html">Tools</a></li>
-      <li><a href="/media-tools.html">Media Tools</a></li>
-      <li><a href="/lounge.html">Lounge</a></li>
       <li><a href="/guestbook.html">Guestbook</a></li>
       <li><a href="/about.html">About</a></li>
     </ul>
     <div class="nav-controls">
-      <button class="sound-toggle magnetic" onclick="toggleSound()">&#9834; On</button>
-      <button class="magnetic" onclick="toggleTheme()">Theme</button>
+      <button class="sound-toggle magnetic" onclick="toggleSound()">Sound On</button>
     </div>
   </div>
 </nav>

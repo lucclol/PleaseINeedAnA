@@ -5,16 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evan's Lounge</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
-<script>
-  var t = localStorage.getItem('ep_theme');
-  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  else { document.documentElement.setAttribute('data-theme', 'dark'); }
-</script>
+<script>document.documentElement.setAttribute('data-theme', 'dark');</script>
 <link rel="stylesheet" href="css/style.css">
 <style>
   body { overflow-x: hidden; }
 
-  /* Hero takes full viewport, sections hidden until enter */
   .home-scroll {
     overflow-y: auto;
     scroll-behavior: smooth;
@@ -33,7 +28,6 @@
     transform: translateY(0);
   }
 
-  /* Hero cinematic */
   .home-hero {
     position: relative;
     overflow: hidden;
@@ -58,14 +52,15 @@
     line-height: 1.8;
   }
 
-  .hero-cta-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
+  .hero-img-secondary {
+    width: clamp(160px, 25vw, 280px);
+    height: auto;
+    border-radius: var(--radius);
+    margin-bottom: 28px;
+    box-shadow: 0 8px 32px var(--shadow);
+    border: 2px solid var(--border);
   }
 
-  /* Section card hover glow line */
   .section-card::after {
     content: '';
     position: absolute;
@@ -81,21 +76,6 @@
     width: 100%;
   }
 
-  /* Section icon */
-  .section-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    display: block;
-    filter: grayscale(0.3);
-    transition: filter 0.3s ease, transform 0.3s ease;
-  }
-
-  .section-card:hover .section-icon {
-    filter: grayscale(0);
-    transform: scale(1.1);
-  }
-
-  /* Additional sections row */
   .sections-row-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -111,9 +91,8 @@
     min-height: 40vh;
   }
 
-  /* Footer section */
   .home-footer-section {
-    min-height: 30vh;
+    min-height: 20vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,17 +106,12 @@
     color: var(--text-muted);
     font-size: 13px;
   }
-
-  .home-footer-section a {
-    color: var(--accent);
-  }
 </style>
 </head>
 <body>
 
 <canvas id="ev-particles"></canvas>
 
-<!-- Minimal cinematic nav -->
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo magnetic">
@@ -146,15 +120,13 @@
     </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <div class="nav-controls">
-      <button class="sound-toggle magnetic" onclick="toggleSound()">&#9834; On</button>
-      <button class="magnetic" onclick="toggleTheme()">Theme</button>
+      <button class="sound-toggle magnetic" onclick="toggleSound()">Sound On</button>
     </div>
   </div>
 </nav>
 
 <div class="home-wrapper home-scroll">
 
-  <!-- ======= HERO ======= -->
   <section class="home-hero">
     <img
       src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif"
@@ -164,45 +136,31 @@
     <h1 class="anim-fade-up anim-delay-1">Evan's Lounge</h1>
     <p class="subtitle anim-fade-up anim-delay-2">An interactive experience</p>
     <p class="tagline anim-fade-up anim-delay-3">
-      Games, tools, sounds &amp; more &mdash; built for vibes.
+      Games, tools, sounds and more.
     </p>
     <button class="btn btn-primary magnetic anim-fade-up anim-delay-4" id="enterBtn" onclick="enterSite()" style="padding: 14px 40px; font-size: 16px; letter-spacing: 1px;">Enter</button>
   </section>
 
   <div class="home-sections-wrap" id="homeSections">
 
-  <!-- ======= MAIN SECTIONS (2x2 grid) ======= -->
   <div class="sections-grid">
 
     <div class="section-card" data-href="/games.html">
       <span class="section-bg-text">Games</span>
       <div class="section-inner">
-        <span class="section-icon">&#127918;</span>
         <span class="section-number">01</span>
         <h2>Games</h2>
-        <p class="section-desc">Rhythm, Snake, Tetris, Sudoku, Typing &amp; Tic-Tac-Toe</p>
+        <p class="section-desc">Rhythm, Snake, Tetris, Sudoku, Typing and Tic-Tac-Toe</p>
         <span class="section-cta">Enter Arcade</span>
-      </div>
-    </div>
-
-    <div class="section-card" data-href="/lounge.html">
-      <span class="section-bg-text">Lounge</span>
-      <div class="section-inner">
-        <span class="section-icon">&#127911;</span>
-        <span class="section-number">02</span>
-        <h2>Sound Lounge</h2>
-        <p class="section-desc">Stream music, build playlists, and vibe with the visualizer</p>
-        <span class="section-cta">Start Listening</span>
       </div>
     </div>
 
     <div class="section-card" data-href="/tools.html">
       <span class="section-bg-text">Tools</span>
       <div class="section-inner">
-        <span class="section-icon">&#128736;</span>
-        <span class="section-number">03</span>
+        <span class="section-number">02</span>
         <h2>Tools</h2>
-        <p class="section-desc">Pomodoro timer, journal, and to-do list for productivity</p>
+        <p class="section-desc">Pomodoro timer, journal, to-do list, image editing, video and audio trimming</p>
         <span class="section-cta">Get Productive</span>
       </div>
     </div>
@@ -210,82 +168,75 @@
     <div class="section-card" data-href="/dashboard.html">
       <span class="section-bg-text">Stats</span>
       <div class="section-inner">
-        <span class="section-icon">&#128202;</span>
-        <span class="section-number">04</span>
+        <span class="section-number">03</span>
         <h2>Dashboard</h2>
         <p class="section-desc">Your stats, leaderboards, and activity at a glance</p>
         <span class="section-cta">View Stats</span>
       </div>
     </div>
 
-  </div>
-
-  <!-- ======= SECONDARY SECTIONS (3-column row) ======= -->
-  <div class="sections-row-3">
-
-    <div class="section-card" data-href="/media-tools.html">
-      <span class="section-bg-text">Media</span>
-      <div class="section-inner">
-        <span class="section-icon">&#127912;</span>
-        <span class="section-number">05</span>
-        <h2>Media Tools</h2>
-        <p class="section-desc">Image, video &amp; audio editing in the browser</p>
-        <span class="section-cta">Create</span>
-      </div>
-    </div>
-
     <div class="section-card" data-href="/guestbook.html">
       <span class="section-bg-text">Guest</span>
       <div class="section-inner">
-        <span class="section-icon">&#128221;</span>
-        <span class="section-number">06</span>
+        <span class="section-number">04</span>
         <h2>Guestbook</h2>
         <p class="section-desc">Leave a message, share images or audio</p>
         <span class="section-cta">Sign</span>
       </div>
     </div>
 
+  </div>
+
+  <div class="sections-row-3">
+
     <div class="section-card" data-href="/about.html">
       <span class="section-bg-text">About</span>
       <div class="section-inner">
-        <span class="section-icon">&#128100;</span>
-        <span class="section-number">07</span>
+        <span class="section-number">05</span>
         <h2>About</h2>
         <p class="section-desc">The person behind the lounge</p>
         <span class="section-cta">Meet Evan</span>
       </div>
     </div>
 
+    <div class="section-card" style="pointer-events:none; opacity:0.3;">
+      <div class="section-inner">
+        <span class="section-number" style="opacity:0.1;">--</span>
+        <h2 style="opacity:0.4;">More Soon</h2>
+      </div>
+    </div>
+
+    <div class="section-card" style="pointer-events:none; opacity:0.3;">
+      <div class="section-inner">
+        <span class="section-number" style="opacity:0.1;">--</span>
+        <h2 style="opacity:0.4;">More Soon</h2>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ======= FOOTER ======= -->
   <div class="home-footer-section">
     <div>
       <p style="font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Lounge</p>
     </div>
   </div>
 
-  </div><!-- /home-sections-wrap -->
+  </div>
 
 </div>
 
-<!-- GSAP CDN -->
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
 
-<!-- Engine -->
 <script src="/js/engine.js"></script>
 
-<!-- Homepage: enter animation + mouse tracking -->
 <script>
 function enterSite() {
   var hero = document.querySelector('.home-hero');
   var sections = document.getElementById('homeSections');
-  var enterBtn = document.getElementById('enterBtn');
 
   if (typeof EvSound !== 'undefined') EvSound.play('whoosh');
 
-  // Fade hero out and up
   gsap.to(hero, {
     opacity: 0,
     y: -60,
@@ -294,9 +245,7 @@ function enterSite() {
     ease: 'power3.in',
     onComplete: function() {
       hero.style.display = 'none';
-      // Reveal sections
       sections.classList.add('visible');
-      // Animate section cards in with stagger
       gsap.from('.section-card', {
         opacity: 0,
         y: 50,
@@ -310,8 +259,7 @@ function enterSite() {
 }
 
 (function() {
-  // Track mouse position on section cards for radial glow
-  document.querySelectorAll('.section-card, .card').forEach(function(el) {
+  document.querySelectorAll('.section-card').forEach(function(el) {
     el.addEventListener('mousemove', function(e) {
       var rect = el.getBoundingClientRect();
       var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
@@ -321,11 +269,9 @@ function enterSite() {
     });
   });
 
-  // Visit counter
   var visits = parseInt(localStorage.getItem('ep_visits') || '0') + 1;
   localStorage.setItem('ep_visits', visits);
 
-  // Log activity
   try {
     var log = JSON.parse(localStorage.getItem('ep_activity') || '[]');
     log.unshift({ page: 'Home', time: Date.now() });
