@@ -1,5 +1,5 @@
 /* ============================================================
-   Evan's Lounge -- Interactive Engine v2
+   Evan's Dungeon -- Interactive Engine v2
    Unseen-inspired: ink transitions, slide menu, typewriter sounds,
    parallax background, hover flip animations.
    ============================================================ */
@@ -356,7 +356,6 @@
 
       e.preventDefault();
       STATE.isTransitioning = true;
-      Sound.play('whoosh');
 
       var isBack = link.classList.contains('back-btn') || link.dataset.transition === 'back';
       var transType = isBack ? 'zoom-out' : 'zoom-in';
@@ -368,7 +367,6 @@
       });
 
       if (isBack) {
-        Sound.play('back');
         tl.to(wrapper, {
           scale: 0.92,
           opacity: 0,
@@ -476,7 +474,6 @@
         e.preventDefault();
         STATE.isTransitioning = true;
 
-        Sound.play('whoosh');
         sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'zoom-in' }));
 
         var wrapper = document.querySelector('.home-wrapper') || document.body;

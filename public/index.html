@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Evan's Lounge</title>
+<title>Evan's Dungeon</title>
 <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png">
 <script>document.documentElement.setAttribute('data-theme', 'dark');</script>
 <link rel="stylesheet" href="css/style.css">
@@ -138,7 +138,7 @@
 <div class="top-bar">
   <a href="/" class="top-bar-logo">
     <img src="https://image2url.com/r2/default/images/1773360165198-6e8b59b8-ece3-41af-bec4-d0f478f440c8.png" alt="Logo">
-    <span>Evan's Lounge</span>
+    <span>Evan's Dungeon</span>
   </a>
   <button class="menu-trigger magnetic" aria-label="Menu">
     <div class="menu-icon">
@@ -204,7 +204,7 @@
       alt="Decoration"
       class="hero-secondary-img anim-fade-up anim-delay-1"
     >
-    <h1 class="anim-fade-up anim-delay-1">Evan's Lounge</h1>
+    <h1 class="anim-fade-up anim-delay-1">Evan's Dungeon</h1>
     <p class="subtitle anim-fade-up anim-delay-2">An interactive experience</p>
     <p class="tagline anim-fade-up anim-delay-3">
       Games, tools, sounds and more.
@@ -288,7 +288,7 @@
 
   <div class="home-footer-section">
     <div>
-      <p style="font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Lounge</p>
+      <p style="font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text-heading);">Evan's Dungeon</p>
     </div>
   </div>
 
@@ -305,8 +305,6 @@
 function enterSite() {
   var hero = document.querySelector('.home-hero');
   var sections = document.getElementById('homeSections');
-
-  if (typeof EvSound !== 'undefined') EvSound.play('whoosh');
 
   // Slide hero out to the left (Unseen-style)
   gsap.to(hero, {
