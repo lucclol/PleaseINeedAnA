@@ -324,9 +324,9 @@ function enterSite() {
 
       gsap.from(sections, {
         x: 80,
-        opacity: 0,
         duration: 0.8,
         ease: 'power2.out',
+        clearProps: 'transform',
       });
 
       gsap.from('.section-card', {
@@ -336,6 +336,7 @@ function enterSite() {
         duration: 0.6,
         ease: 'power2.out',
         delay: 0.15,
+        clearProps: 'opacity,transform',
       });
     }
   });
