@@ -164,15 +164,9 @@
      ========================================================== */
   function initHoverSounds() {
     document.addEventListener('mouseover', function (e) {
-      // Typewriter sound for small buttons (btn, section-cta, etc)
-      var smallBtn = e.target.closest('.btn, .section-cta, .tool-tab, .timer-preset, .back-btn');
-      if (smallBtn) {
-        Sound.play('typewriter');
-        return;
-      }
-      // Regular hover sound for larger interactive elements
-      var interactive = e.target.closest('.slide-menu-link, .card, .section-card, [data-hover]');
-      if (interactive) {
+      // Only play hover sound on slide menu links
+      var menuLink = e.target.closest('.slide-menu-link');
+      if (menuLink) {
         Sound.play('hover');
       }
     });
@@ -304,130 +298,53 @@
   }
 
   /* ==========================================================
-     5. INK BLEED PAGE TRANSITION
-     ========================================================== */
-  function createInkOverlay() {
-    // Create the SVG ink bleed overlay if it doesn't exist
-    if (document.getElementById('ink-transition')) return;
-
-    var div = document.createElement('div');
-    div.id = 'ink-transition';
-    div.className = 'ink-transition';
-    div.innerHTML = '<svg viewBox="0 0 1440 900" preserveAspectRatio="none">' +
-      '<path class="ink-shape" d="M0 900 L0 900 L1440 900 L1440 900 Z"/>' +
-      '</svg>';
-    document.body.appendChild(div);
-  }
-
-  function playInkTransition(href) {
-    if (typeof gsap === 'undefined') {
-      window.location.href = href;
-      return;
-    }
-
-    createInkOverlay();
-    var shape = document.querySelector('.ink-shape');
-    if (!shape) {
-      window.location.href = href;
-      return;
-    }
-
-    Sound.play('whoosh');
-
-    // Ink blob expands from bottom, covering the screen organically
-    var tl = gsap.timeline({
-      onComplete: function () {
-        window.location.href = href;
-      }
-    });
-
-    // Animate SVG path from nothing to full coverage with organic blob shape
-    tl.to(shape, {
-      attr: {
-        d: 'M0 900 L0 400 Q120 280 240 350 Q360 180 480 300 Q600 100 720 250 Q840 80 960 200 Q1080 50 1200 180 Q1320 100 1440 150 L1440 900 Z'
-      },
-      duration: 0.3,
-      ease: 'power2.in',
-    })
-    .to(shape, {
-      attr: {
-        d: 'M0 900 L0 0 Q120 50 240 0 Q360 30 480 0 Q600 40 720 0 Q840 20 960 0 Q1080 30 1200 0 Q1320 10 1440 0 L1440 900 Z'
-      },
-      duration: 0.35,
-      ease: 'power3.inOut',
-    });
-  }
-
-  function playInkReveal() {
-    if (typeof gsap === 'undefined') return;
-
-    createInkOverlay();
-    var shape = document.querySelector('.ink-shape');
-    if (!shape) return;
-
-    // Start fully covered
-    gsap.set(shape, {
-      attr: {
-        d: 'M0 900 L0 0 L1440 0 L1440 900 Z'
-      }
-    });
-
-    // Reveal: ink recedes upward with organic edge
-    var tl = gsap.timeline();
-    tl.to(shape, {
-      attr: {
-        d: 'M0 900 L0 -100 Q120 -50 240 -100 Q360 -80 480 -100 Q600 -60 720 -100 Q840 -70 960 -100 Q1080 -50 1200 -100 Q1320 -80 1440 -100 L1440 900 Z'
-      },
-      duration: 0.5,
-      ease: 'power2.out',
-      delay: 0.1,
-    })
-    .set(shape, {
-      attr: {
-        d: 'M0 900 L0 900 L1440 900 L1440 900 Z'
-      }
-    });
-  }
-
-  /* ==========================================================
-     6. PAGE TRANSITIONS (ink bleed + slide)
+     5. PAGE TRANSITIONS (zoom in/out)
      ========================================================== */
   function initTransitions() {
     if (typeof gsap === 'undefined') return;
 
     var wrapper = document.querySelector('.page-transition-wrapper');
+    if (!wrapper) return;
 
-    // --- Enter animation: ink reveal + content slide in ---
+    // --- Enter animation ---
     var transData = sessionStorage.getItem('ev_transition');
     if (transData) {
       sessionStorage.removeItem('ev_transition');
+      var data = JSON.parse(transData);
 
-      if (wrapper) {
-        gsap.set(wrapper, { opacity: 0, x: 60 });
-        playInkReveal();
+      gsap.set(wrapper, { opacity: 0 });
+
+      if (data.type === 'zoom-in') {
+        gsap.set(wrapper, { scale: 0.92, transformOrigin: 'center center' });
         gsap.to(wrapper, {
+          scale: 1,
           opacity: 1,
-          x: 0,
-          duration: 0.7,
+          duration: 0.6,
           ease: 'power2.out',
-          delay: 0.3,
+          delay: 0.05,
         });
-      } else {
-        playInkReveal();
+      } else if (data.type === 'zoom-out') {
+        gsap.set(wrapper, { scale: 1.08 });
+        gsap.to(wrapper, {
+          scale: 1,
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+          delay: 0.05,
+        });
       }
-    } else if (wrapper) {
-      // Default page-load: slide in from right
-      gsap.set(wrapper, { opacity: 0, x: 40 });
+    } else {
+      gsap.set(wrapper, { opacity: 0 });
       gsap.to(wrapper, {
         opacity: 1,
-        x: 0,
-        duration: 0.6,
+        y: 0,
+        duration: 0.5,
         ease: 'power2.out',
         delay: 0.05,
       });
     }
 
-    // --- Intercept navigation links ---
+    // --- Intercept navigation links for zoom transition ---
     document.addEventListener('click', function (e) {
       var link = e.target.closest('a[href]');
       if (!link) return;
@@ -439,20 +356,33 @@
 
       e.preventDefault();
       STATE.isTransitioning = true;
+      Sound.play('whoosh');
 
-      sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'ink' }));
+      var isBack = link.classList.contains('back-btn') || link.dataset.transition === 'back';
+      var transType = isBack ? 'zoom-out' : 'zoom-in';
 
-      // Slide current content out to the left while ink covers
-      if (wrapper) {
-        gsap.to(wrapper, {
+      sessionStorage.setItem('ev_transition', JSON.stringify({ type: transType }));
+
+      var tl = gsap.timeline({
+        onComplete: function () { window.location.href = href; },
+      });
+
+      if (isBack) {
+        Sound.play('back');
+        tl.to(wrapper, {
+          scale: 0.92,
           opacity: 0,
-          x: -60,
+          duration: 0.4,
+          ease: 'power2.in',
+        });
+      } else {
+        tl.to(wrapper, {
+          scale: 1.05,
+          opacity: 0,
           duration: 0.4,
           ease: 'power2.in',
         });
       }
-
-      playInkTransition(href);
     });
   }
 
@@ -471,7 +401,7 @@
       menu.classList.toggle('open', STATE.menuOpen);
       if (overlay) overlay.classList.toggle('open', STATE.menuOpen);
 
-      Sound.play(STATE.menuOpen ? 'menu-open' : 'menu-close');
+      // No sound on menu toggle
 
       // Stagger animate menu items in
       if (STATE.menuOpen && typeof gsap !== 'undefined') {
@@ -536,7 +466,7 @@
       });
     });
 
-    // Click on section cards - ink transition
+    // Zoom-in click on section cards
     sections.forEach(function (sec) {
       var href = sec.dataset.href;
       if (!href) return;
@@ -547,23 +477,21 @@
         STATE.isTransitioning = true;
 
         Sound.play('whoosh');
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'ink' }));
+        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'zoom-in' }));
 
-        // Zoom into the card while ink covers
         var wrapper = document.querySelector('.home-wrapper') || document.body;
         var rect = sec.getBoundingClientRect();
         var ox = rect.left + rect.width / 2;
         var oy = rect.top + rect.height / 2;
 
         gsap.to(wrapper, {
-          scale: 1.1,
-          opacity: 0.5,
-          duration: 0.5,
-          ease: 'power2.in',
+          scale: 1.5,
+          opacity: 0,
+          duration: 0.6,
+          ease: 'power3.in',
           transformOrigin: ox + 'px ' + oy + 'px',
+          onComplete: function () { window.location.href = href; },
         });
-
-        playInkTransition(href);
       });
     });
   }
@@ -629,7 +557,7 @@
   window.toggleSound = function () {
     STATE.soundEnabled = !STATE.soundEnabled;
     localStorage.setItem('ep_sound', STATE.soundEnabled ? 'on' : 'off');
-    if (STATE.soundEnabled) Sound.play('typewriter');
+    // No sound on toggle
     var btns = document.querySelectorAll('.sound-toggle');
     btns.forEach(function (btn) {
       btn.textContent = STATE.soundEnabled ? 'Sound On' : 'Sound Off';

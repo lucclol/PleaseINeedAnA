@@ -310,10 +310,9 @@ a:hover { color: var(--accent-hover); }
   transform-origin: left center;
 }
 
-/* Unseen-style hover: flip/pop + italicize */
+/* Unseen-style hover: smooth skew to simulate italic + pop out */
 .slide-menu-link:hover .slide-menu-label {
-  font-style: italic;
-  transform: translateX(12px) skewX(-3deg);
+  transform: translateX(12px) skewX(-8deg);
   letter-spacing: 1px;
 }
 
@@ -473,10 +472,7 @@ a:hover { color: var(--accent-hover); }
 .home-hero h1 {
   font-size: clamp(48px, 10vw, 100px);
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-heading) 20%, var(--accent) 50%, var(--gold) 80%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
   margin-bottom: 16px;
   letter-spacing: -1px;
 }

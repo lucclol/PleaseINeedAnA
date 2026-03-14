@@ -44,6 +44,14 @@
     animation: glow-pulse 4s ease-in-out infinite;
   }
 
+  .hero-secondary-img {
+    width: clamp(180px, 30vw, 320px);
+    border-radius: 16px;
+    object-fit: cover;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 40px var(--shadow);
+  }
+
   .home-hero .tagline {
     color: var(--text-muted);
     font-size: 14px;
@@ -190,6 +198,11 @@
       src="https://image2url.com/r2/default/images/1773359872295-7d3cfdcd-1085-4dd0-a508-349d063e7e1d.gif"
       alt="Evan"
       class="hero-avatar anim-scale-in"
+    >
+    <img
+      src="https://image2url.com/r2/default/images/1773527066240-a80a9091-442c-4da0-8356-3cf4fc9814a1.gif"
+      alt="Decoration"
+      class="hero-secondary-img anim-fade-up anim-delay-1"
     >
     <h1 class="anim-fade-up anim-delay-1">Evan's Lounge</h1>
     <p class="subtitle anim-fade-up anim-delay-2">An interactive experience</p>
