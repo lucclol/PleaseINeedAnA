@@ -308,35 +308,31 @@
 function enterSite() {
   var hero = document.querySelector('.home-hero');
   var sections = document.getElementById('homeSections');
+  var wrapper = document.querySelector('.home-wrapper');
 
-  // Slide hero out to the left (Unseen-style)
-  gsap.to(hero, {
-    opacity: 0,
-    x: -120,
-    duration: 0.7,
-    ease: 'power3.in',
+  // Make sections visible but positioned fully off-screen right
+  sections.classList.add('visible');
+  gsap.set(sections, { x: window.innerWidth });
+
+  // Slide hero and sections together — hero goes left, sections come from right
+  var tl = gsap.timeline();
+
+  tl.to(hero, {
+    x: -window.innerWidth,
+    duration: 0.8,
+    ease: 'power3.inOut',
+  }, 0);
+
+  tl.to(sections, {
+    x: 0,
+    duration: 0.8,
+    ease: 'power3.inOut',
     onComplete: function() {
       hero.style.display = 'none';
-
-      // Slide sections in from the right
-      sections.style.transition = 'none';
-      sections.classList.add('visible');
-
-      gsap.from(sections, {
-        x: 80,
-        duration: 0.8,
-        ease: 'power2.out',
-      });
-
-      gsap.from('.section-card', {
-        x: 60,
-        stagger: 0.08,
-        duration: 0.6,
-        ease: 'power2.out',
-        delay: 0.15,
-      });
+      // Scroll to top of sections
+      wrapper.scrollTop = 0;
     }
-  });
+  }, 0);
 }
 
 (function() {
