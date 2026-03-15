@@ -173,7 +173,7 @@
   }
 
   /* ==========================================================
-     3. PARTICLE BACKGROUND (Canvas)
+     3. STARFIELD BACKGROUND (Canvas) — shooting stars + twinkle
      ========================================================== */
   function initParticles() {
     var canvas = document.getElementById('ev-particles');
@@ -182,10 +182,12 @@
 
     var ctx2d = canvas.getContext('2d');
     var W, H;
-    var particles = [];
+    var stars = [];
+    var shootingStars = [];
     var mouse = { x: -9999, y: -9999 };
-    var PARTICLE_COUNT = Math.min(80, Math.floor(window.innerWidth / 18));
-    var CONNECT_DIST = 140;
+    var isMobile = window.innerWidth < 768;
+    var STAR_COUNT = isMobile ? 120 : Math.min(300, Math.floor(window.innerWidth / 6));
+    var CONNECT_DIST = 100;
     var MOUSE_RADIUS = 160;
 
     function resize() {
@@ -195,70 +197,175 @@
     resize();
     window.addEventListener('resize', resize);
 
-    document.addEventListener('mousemove', function (e) {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
-    document.addEventListener('mouseleave', function () {
-      mouse.x = -9999;
-      mouse.y = -9999;
-    });
-
-    for (var i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 1.8 + 0.6,
-        alpha: Math.random() * 0.4 + 0.1,
+    if (!isMobile) {
+      document.addEventListener('mousemove', function (e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+      document.addEventListener('mouseleave', function () {
+        mouse.x = -9999;
+        mouse.y = -9999;
       });
     }
 
+    // Create stars with depth layers
+    for (var i = 0; i < STAR_COUNT; i++) {
+      var depth = Math.random(); // 0 = far, 1 = near
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.15 * (0.3 + depth * 0.7),
+        vy: (Math.random() - 0.5) * 0.15 * (0.3 + depth * 0.7),
+        r: (0.3 + depth * 1.8),
+        baseAlpha: 0.15 + depth * 0.55,
+        alpha: 0.3,
+        twinkleSpeed: 0.005 + Math.random() * 0.02,
+        twinkleOffset: Math.random() * Math.PI * 2,
+        depth: depth,
+        hue: Math.random() < 0.15 ? (180 + Math.random() * 40) : -1, // 15% chance of cyan/teal tinted star
+      });
+    }
+
+    // Spawn shooting star
+    function spawnShootingStar() {
+      if (shootingStars.length >= 2) return;
+      var startX = Math.random() * W * 0.8;
+      var startY = Math.random() * H * 0.4;
+      var angle = Math.PI / 6 + Math.random() * Math.PI / 6; // 30-60 degrees
+      var speed = 6 + Math.random() * 8;
+      shootingStars.push({
+        x: startX,
+        y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.0,
+        decay: 0.012 + Math.random() * 0.008,
+        length: 60 + Math.random() * 80,
+        width: 1 + Math.random() * 1.5,
+      });
+    }
+
+    // Randomly spawn shooting stars
+    setInterval(function () {
+      if (Math.random() < 0.4) spawnShootingStar();
+    }, 3000);
+    // One on load after a short delay
+    setTimeout(spawnShootingStar, 1500);
+
+    var frame = 0;
     function draw() {
       ctx2d.clearRect(0, 0, W, H);
-      var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c8db5';
+      frame++;
+      var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4db8ff';
       var rgb = hexToRgb(accent);
 
-      for (var i = 0; i < particles.length; i++) {
-        var p = particles[i];
-        var dx = p.x - mouse.x;
-        var dy = p.y - mouse.y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < MOUSE_RADIUS && dist > 0) {
-          var force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
-          p.vx += (dx / dist) * force * 0.3;
-          p.vy += (dy / dist) * force * 0.3;
-        }
-        p.vx *= 0.98;
-        p.vy *= 0.98;
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x = W;
-        if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H;
-        if (p.y > H) p.y = 0;
+      // Draw stars
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
 
+        // Twinkle
+        var twinkle = Math.sin(frame * s.twinkleSpeed + s.twinkleOffset);
+        s.alpha = s.baseAlpha + twinkle * 0.25;
+        if (s.alpha < 0.05) s.alpha = 0.05;
+        if (s.alpha > 0.9) s.alpha = 0.9;
+
+        // Mouse interaction (desktop only)
+        if (!isMobile) {
+          var dx = s.x - mouse.x;
+          var dy = s.y - mouse.y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MOUSE_RADIUS && dist > 0) {
+            var force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+            s.vx += (dx / dist) * force * 0.15;
+            s.vy += (dy / dist) * force * 0.15;
+            // Brighten stars near cursor
+            s.alpha = Math.min(1, s.alpha + force * 0.4);
+          }
+        }
+
+        s.vx *= 0.99;
+        s.vy *= 0.99;
+        s.x += s.vx;
+        s.y += s.vy;
+        if (s.x < 0) s.x = W;
+        if (s.x > W) s.x = 0;
+        if (s.y < 0) s.y = H;
+        if (s.y > H) s.y = 0;
+
+        // Draw star with optional color
         ctx2d.beginPath();
-        ctx2d.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx2d.fillStyle = 'rgba(' + rgb + ', ' + p.alpha + ')';
+        ctx2d.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        if (s.hue > 0) {
+          ctx2d.fillStyle = 'hsla(' + s.hue + ', 70%, 70%, ' + s.alpha + ')';
+        } else {
+          ctx2d.fillStyle = 'rgba(' + rgb + ', ' + s.alpha + ')';
+        }
         ctx2d.fill();
 
-        for (var j = i + 1; j < particles.length; j++) {
-          var p2 = particles[j];
-          var ddx = p.x - p2.x;
-          var ddy = p.y - p2.y;
-          var d = Math.sqrt(ddx * ddx + ddy * ddy);
-          if (d < CONNECT_DIST) {
-            ctx2d.beginPath();
-            ctx2d.moveTo(p.x, p.y);
-            ctx2d.lineTo(p2.x, p2.y);
-            ctx2d.strokeStyle = 'rgba(' + rgb + ', ' + (0.08 * (1 - d / CONNECT_DIST)) + ')';
-            ctx2d.lineWidth = 0.6;
-            ctx2d.stroke();
+        // Draw glow for bright/near stars
+        if (s.depth > 0.7 && s.alpha > 0.5) {
+          ctx2d.beginPath();
+          ctx2d.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+          ctx2d.fillStyle = 'rgba(' + rgb + ', ' + (s.alpha * 0.08) + ')';
+          ctx2d.fill();
+        }
+
+        // Connect nearby stars (reduced for performance)
+        if (!isMobile && s.depth > 0.5) {
+          for (var j = i + 1; j < stars.length; j++) {
+            var s2 = stars[j];
+            if (s2.depth < 0.5) continue;
+            var ddx = s.x - s2.x;
+            var ddy = s.y - s2.y;
+            var d = Math.sqrt(ddx * ddx + ddy * ddy);
+            if (d < CONNECT_DIST) {
+              ctx2d.beginPath();
+              ctx2d.moveTo(s.x, s.y);
+              ctx2d.lineTo(s2.x, s2.y);
+              ctx2d.strokeStyle = 'rgba(' + rgb + ', ' + (0.06 * (1 - d / CONNECT_DIST)) + ')';
+              ctx2d.lineWidth = 0.4;
+              ctx2d.stroke();
+            }
           }
         }
       }
+
+      // Draw shooting stars
+      for (var k = shootingStars.length - 1; k >= 0; k--) {
+        var ss = shootingStars[k];
+        ss.x += ss.vx;
+        ss.y += ss.vy;
+        ss.life -= ss.decay;
+
+        if (ss.life <= 0 || ss.x > W + 100 || ss.y > H + 100) {
+          shootingStars.splice(k, 1);
+          continue;
+        }
+
+        // Shooting star trail
+        var tailX = ss.x - (ss.vx / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy)) * ss.length * ss.life;
+        var tailY = ss.y - (ss.vy / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy)) * ss.length * ss.life;
+
+        var grad = ctx2d.createLinearGradient(ss.x, ss.y, tailX, tailY);
+        grad.addColorStop(0, 'rgba(255, 255, 255, ' + (ss.life * 0.9) + ')');
+        grad.addColorStop(0.3, 'rgba(' + rgb + ', ' + (ss.life * 0.6) + ')');
+        grad.addColorStop(1, 'rgba(' + rgb + ', 0)');
+
+        ctx2d.beginPath();
+        ctx2d.moveTo(ss.x, ss.y);
+        ctx2d.lineTo(tailX, tailY);
+        ctx2d.strokeStyle = grad;
+        ctx2d.lineWidth = ss.width * ss.life;
+        ctx2d.lineCap = 'round';
+        ctx2d.stroke();
+
+        // Bright head
+        ctx2d.beginPath();
+        ctx2d.arc(ss.x, ss.y, 1.5 * ss.life, 0, Math.PI * 2);
+        ctx2d.fillStyle = 'rgba(255, 255, 255, ' + (ss.life * 0.8) + ')';
+        ctx2d.fill();
+      }
+
       requestAnimationFrame(draw);
     }
     draw();
@@ -652,6 +759,98 @@
   }
 
   /* ==========================================================
+     13. CURSOR GLOW TRAIL (desktop only)
+     ========================================================== */
+  function initCursorTrail() {
+    // Skip on mobile / touch devices
+    if (window.innerWidth < 768 || 'ontouchstart' in window) return;
+
+    var trail = [];
+    var TRAIL_LENGTH = 20;
+    var mouse = { x: -100, y: -100 };
+    var canvas = document.createElement('canvas');
+    canvas.id = 'ev-cursor-trail';
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;pointer-events:none;';
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    document.addEventListener('mousemove', function (e) {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    document.addEventListener('mouseleave', function () {
+      mouse.x = -100;
+      mouse.y = -100;
+    });
+
+    function drawTrail() {
+      trail.push({ x: mouse.x, y: mouse.y });
+      if (trail.length > TRAIL_LENGTH) trail.shift();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (var i = 0; i < trail.length; i++) {
+        var t = trail[i];
+        if (t.x < 0) continue;
+        var progress = i / trail.length;
+        var alpha = progress * 0.35;
+        var radius = progress * 6 + 1;
+
+        // Outer glow
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, radius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(77, 184, 255, ' + (alpha * 0.15) + ')';
+        ctx.fill();
+
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(160, 220, 255, ' + alpha + ')';
+        ctx.fill();
+      }
+
+      // Head glow at current position
+      if (mouse.x > 0) {
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
+        var headGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 12);
+        headGrad.addColorStop(0, 'rgba(77, 184, 255, 0.15)');
+        headGrad.addColorStop(1, 'rgba(77, 184, 255, 0)');
+        ctx.fillStyle = headGrad;
+        ctx.fill();
+      }
+
+      requestAnimationFrame(drawTrail);
+    }
+    drawTrail();
+  }
+
+  /* ==========================================================
+     14. AURORA / COMET GRADIENT ACCENTS
+     ========================================================== */
+  function initAuroraAccents() {
+    // Create aurora overlay element
+    var aurora = document.createElement('div');
+    aurora.id = 'ev-aurora';
+    aurora.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.4;';
+    aurora.innerHTML = '<div class="aurora-band aurora-band-1"></div><div class="aurora-band aurora-band-2"></div><div class="aurora-band aurora-band-3"></div>';
+    // Insert after canvas
+    var particleCanvas = document.getElementById('ev-particles');
+    if (particleCanvas && particleCanvas.parentNode) {
+      particleCanvas.parentNode.insertBefore(aurora, particleCanvas.nextSibling);
+    } else {
+      document.body.insertBefore(aurora, document.body.firstChild);
+    }
+  }
+
+  /* ==========================================================
      INIT
      ========================================================== */
   function init() {
@@ -663,6 +862,8 @@
     initTransitions();
     initHomeSections();
     initMagnetic();
+    initCursorTrail();
+    initAuroraAccents();
     initBgMusic();
 
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
