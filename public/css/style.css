@@ -4,51 +4,51 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
 
-/* ---- Dark theme (default) ---- */
+/* ---- Dark theme (default) — celestial night sky ---- */
 :root {
-  --bg: #12121a;
-  --bg-card: rgba(255, 255, 255, 0.05);
-  --bg-card-hover: rgba(255, 255, 255, 0.09);
-  --bg-surface: rgba(255, 255, 255, 0.04);
-  --bg-nav: rgba(18, 18, 26, 0.85);
-  --text: #b8b8c8;
-  --text-muted: #5a5a6e;
-  --text-heading: #e8e8f0;
-  --accent: #6c8cff;
-  --accent-hover: #8aa4ff;
-  --accent-glow: rgba(108, 140, 255, 0.25);
-  --accent-dim: rgba(108, 140, 255, 0.1);
-  --gold: #d4a853;
-  --gold-glow: rgba(212, 168, 83, 0.2);
-  --border: rgba(255, 255, 255, 0.06);
-  --border-light: rgba(255, 255, 255, 0.1);
-  --shadow: rgba(0, 0, 0, 0.4);
+  --bg: #0a0e1a;
+  --bg-card: rgba(100, 180, 255, 0.05);
+  --bg-card-hover: rgba(100, 180, 255, 0.1);
+  --bg-surface: rgba(80, 160, 255, 0.04);
+  --bg-nav: rgba(10, 14, 26, 0.9);
+  --text: #b0c4de;
+  --text-muted: #4a6a8a;
+  --text-heading: #e4eeff;
+  --accent: #4db8ff;
+  --accent-hover: #7dccff;
+  --accent-glow: rgba(77, 184, 255, 0.3);
+  --accent-dim: rgba(77, 184, 255, 0.1);
+  --gold: #e8a840;
+  --gold-glow: rgba(232, 168, 64, 0.25);
+  --border: rgba(100, 180, 255, 0.08);
+  --border-light: rgba(120, 190, 255, 0.14);
+  --shadow: rgba(0, 0, 0, 0.5);
   --radius: 16px;
   --radius-sm: 10px;
   --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --glow-spread: 0 0 60px rgba(108, 140, 255, 0.08);
+  --glow-spread: 0 0 80px rgba(77, 184, 255, 0.1);
 }
 
 /* ---- Light theme ---- */
 [data-theme="light"] {
-  --bg: #f0efe8;
-  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg: #edf3fa;
+  --bg-card: rgba(255, 255, 255, 0.85);
   --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --bg-surface: rgba(0, 0, 0, 0.03);
-  --bg-nav: rgba(240, 239, 232, 0.9);
-  --text: #3a3a44;
-  --text-muted: #8a8a96;
-  --text-heading: #1a1a22;
-  --accent: #4a6adf;
-  --accent-hover: #3a5ad0;
-  --accent-glow: rgba(74, 106, 223, 0.15);
-  --accent-dim: rgba(74, 106, 223, 0.08);
-  --gold: #b08830;
-  --gold-glow: rgba(176, 136, 48, 0.12);
-  --border: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.12);
-  --shadow: rgba(0, 0, 0, 0.08);
-  --glow-spread: 0 0 40px rgba(74, 106, 223, 0.06);
+  --bg-surface: rgba(40, 100, 180, 0.04);
+  --bg-nav: rgba(237, 243, 250, 0.92);
+  --text: #2a3a50;
+  --text-muted: #6a8098;
+  --text-heading: #0e1e30;
+  --accent: #2088d4;
+  --accent-hover: #1870b8;
+  --accent-glow: rgba(32, 136, 212, 0.18);
+  --accent-dim: rgba(32, 136, 212, 0.08);
+  --gold: #c08420;
+  --gold-glow: rgba(192, 132, 32, 0.15);
+  --border: rgba(0, 40, 100, 0.08);
+  --border-light: rgba(0, 40, 100, 0.12);
+  --shadow: rgba(0, 20, 60, 0.1);
+  --glow-spread: 0 0 40px rgba(32, 136, 212, 0.08);
 }
 
 /* ---- Reset ---- */
@@ -353,36 +353,28 @@ a:hover { color: var(--accent-hover); }
    BACK BUTTON (inner pages)
    ============================================================ */
 .back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted) !important;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  background: url('https://image2url.com/r2/default/images/1773549596003-7a925fb7-1cb8-472a-ac7e-f60b40df114b.png') center / contain no-repeat;
+  border: none;
+  border-radius: 50%;
   margin-bottom: 24px;
   transition: all var(--transition);
-  letter-spacing: 0.3px;
+  font-size: 0;
+  color: transparent !important;
+  padding: 0;
+  opacity: 0.7;
 }
 
 .back-btn:hover {
-  color: var(--accent) !important;
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  transform: translateX(-4px);
+  opacity: 1;
+  transform: scale(1.1);
+  color: transparent !important;
 }
 
 .back-btn::before {
-  content: '\2190';
-  font-size: 16px;
-  transition: transform 0.3s ease;
-}
-
-.back-btn:hover::before {
-  transform: translateX(-3px);
+  content: none;
 }
 
 /* ============================================================
