@@ -679,8 +679,15 @@ function update(ts) {
     }
   }
 
-  if (elapsed >= state.songDuration && !state.fading) { state.fading = true; fadeOutMusic(); }
-  if (elapsed > state.songLength && state.arrows.every(a => a.hit)) { endGame(); return; }
+  // End game: when song finishes and all arrows are resolved
+  if (elapsed >= state.songDuration - FADE_DURATION && !state.fading) { state.fading = true; fadeOutMusic(); }
+  const allResolved = state.spawnIndex >= state.songPattern.length && state.arrows.every(a => a.hit);
+  const songOver = music.ended || elapsed >= state.songDuration;
+  if (songOver && allResolved) { endGame(); return; }
+  // Fallback: if song ended and arrows still pending, give 3 more seconds then force end
+  if (songOver && !state.endTimer) {
+    state.endTimer = setTimeout(() => { if (state.running) endGame(); }, 3000);
+  }
   requestAnimationFrame(update);
 }
 
@@ -695,7 +702,13 @@ function tryHit(dir) {
       bestDist = absDist; best = a;
     }
   }
-  if (!best) return;
+  if (!best) {
+    // Penalty for pressing with no arrow nearby
+    state.score = Math.max(0, state.score - 50);
+    state.combo = 0;
+    updateHUD(); updateComboDisplay();
+    return;
+  }
   if (bestDist <= 40) {
     best.hit = true; best.el.remove(); state.perfect++; state.score += 300; state.combo++;
   } else {
@@ -869,14 +882,15 @@ function stopVoice() { if(recognition){try{recognition.abort();}catch(e){}recogn
 document.addEventListener('keydown', e => {
   if (!state.running) return;
   const k = {ArrowLeft:'left',ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',d:'left',f:'down',j:'up',k:'right',D:'left',F:'down',J:'up',K:'right'};
-  const d = k[e.key]; if (d) { e.preventDefault(); tryHit(d); showVoice(d.toUpperCase()); }
+  const d = k[e.key]; if (d) { e.preventDefault(); tryHit(d); }
 });
 
 /* ----------------------------------------------------------
    START / END GAME
    ---------------------------------------------------------- */
 async function startGame() {
-  Object.assign(state, {score:0,combo:0,maxCombo:0,perfect:0,good:0,miss:0,arrows:[],spawnIndex:0,lastFrame:0,fading:false,comboTimer:null});
+  if (state.endTimer) { clearTimeout(state.endTimer); state.endTimer = null; }
+  Object.assign(state, {score:0,combo:0,maxCombo:0,perfect:0,good:0,miss:0,arrows:[],spawnIndex:0,lastFrame:0,fading:false,comboTimer:null,endTimer:null});
   document.querySelectorAll('.arrow').forEach(el => el.remove());
   document.querySelectorAll('.particle-container').forEach(el => el.remove());
   document.querySelectorAll('.hit-ring').forEach(el => el.remove());
