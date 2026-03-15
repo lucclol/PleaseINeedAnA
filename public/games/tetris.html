@@ -9,8 +9,7 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   body {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-    background-attachment: fixed;
+    background: var(--bg);
   }
 
   .game-container {
@@ -35,7 +34,7 @@
   canvas {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    background: #231f1b;
+    background: #12121a;
   }
 
   .side-panel {
@@ -528,7 +527,7 @@
   function drawHold() { drawMiniPiece(holdCtx, holdCanvas, holdType); }
 
   function draw() {
-    ctx.fillStyle = '#231f1b';
+    ctx.fillStyle = '#12121a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.strokeStyle = '#2e2924';
