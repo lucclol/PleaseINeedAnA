@@ -1062,3 +1062,184 @@ input, textarea, select {
 .magnetic {
   will-change: transform;
 }
+
+/* ============================================================
+   AURORA / COMET GRADIENT BANDS
+   ============================================================ */
+#ev-aurora {
+  mix-blend-mode: screen;
+}
+
+.aurora-band {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: aurora-drift linear infinite;
+}
+
+.aurora-band-1 {
+  width: 600px;
+  height: 200px;
+  background: radial-gradient(ellipse, rgba(77, 184, 255, 0.15) 0%, rgba(0, 200, 180, 0.08) 50%, transparent 70%);
+  top: 10%;
+  left: -10%;
+  animation-duration: 25s;
+}
+
+.aurora-band-2 {
+  width: 500px;
+  height: 180px;
+  background: radial-gradient(ellipse, rgba(100, 60, 200, 0.1) 0%, rgba(77, 184, 255, 0.06) 50%, transparent 70%);
+  top: 60%;
+  right: -15%;
+  animation-duration: 30s;
+  animation-direction: reverse;
+}
+
+.aurora-band-3 {
+  width: 400px;
+  height: 150px;
+  background: radial-gradient(ellipse, rgba(0, 200, 180, 0.08) 0%, rgba(77, 184, 255, 0.05) 50%, transparent 70%);
+  top: 35%;
+  left: 30%;
+  animation-duration: 35s;
+}
+
+@keyframes aurora-drift {
+  0% { transform: translateX(-20%) translateY(0) rotate(0deg); }
+  25% { transform: translateX(15%) translateY(-30px) rotate(3deg); }
+  50% { transform: translateX(30%) translateY(10px) rotate(-2deg); }
+  75% { transform: translateX(10%) translateY(-20px) rotate(4deg); }
+  100% { transform: translateX(-20%) translateY(0) rotate(0deg); }
+}
+
+/* ============================================================
+   GLASSMORPHISM CARDS
+   ============================================================ */
+.card,
+.stat-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(15, 25, 50, 0.5);
+  border: 1px solid rgba(100, 180, 255, 0.1);
+}
+
+.card:hover {
+  background: rgba(20, 35, 70, 0.6);
+  border-color: rgba(77, 184, 255, 0.2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 60px rgba(77, 184, 255, 0.08);
+}
+
+.section-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 20, 45, 0.3);
+}
+
+.section-card:hover {
+  background: rgba(15, 30, 60, 0.5);
+  border-color: rgba(77, 184, 255, 0.2);
+}
+
+.settings-panel,
+.slide-menu {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.menu-trigger {
+  background: rgba(10, 14, 26, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ============================================================
+   ENHANCED MICRO-INTERACTIONS
+   ============================================================ */
+
+/* Smooth card tilt on hover (via will-change) */
+.card {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+}
+
+/* Button press ripple effect */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.5s ease;
+  border-radius: inherit;
+}
+
+.btn:active::after {
+  opacity: 1;
+  transform: scale(2);
+  transition: all 0.15s ease;
+}
+
+/* Section card hover glow pulse */
+.section-card::before {
+  transition: opacity 0.6s ease;
+}
+
+/* Heading gradient shimmer */
+.page-header h1 {
+  background-size: 200% 100%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Hover lift for stat cards */
+.stat-card {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(77, 184, 255, 0.2);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3), 0 0 40px rgba(77, 184, 255, 0.06);
+}
+
+/* Enter button glow pulse */
+.enter-pill {
+  position: relative;
+}
+
+.enter-pill::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgba(77, 184, 255, 0.3), rgba(0, 200, 180, 0.2), rgba(100, 60, 200, 0.2));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+  filter: blur(12px);
+}
+
+.enter-pill:hover::before {
+  opacity: 1;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Menu link hover glow */
+.slide-menu-link {
+  position: relative;
+}
+
+.slide-menu-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), rgba(0, 200, 180, 0.5));
+  transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-menu-link:hover::after {
+  width: 100%;
+}
