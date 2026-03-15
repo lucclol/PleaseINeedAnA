@@ -405,7 +405,7 @@
   }
 
   /* ==========================================================
-     5. PAGE TRANSITIONS (zoom in/out)
+     5. PAGE TRANSITIONS (seamless prefetch)
      ========================================================== */
   function initTransitions() {
     if (typeof gsap === 'undefined') return;
@@ -413,41 +413,12 @@
     var wrapper = document.querySelector('.page-transition-wrapper');
     if (!wrapper) return;
 
-    // --- Enter animation ---
+    // --- Enter animation (only used on first load / direct navigation) ---
     var transData = sessionStorage.getItem('ev_transition');
     if (transData) {
       sessionStorage.removeItem('ev_transition');
-      var data = JSON.parse(transData);
-
-      gsap.set(wrapper, { opacity: 0 });
-
-      if (data.type === 'slide') {
-        gsap.set(wrapper, { x: '-100%', opacity: 1 });
-        gsap.to(wrapper, {
-          x: '0%',
-          duration: 0.6,
-          ease: 'power3.out',
-          delay: 0.02,
-        });
-      } else if (data.type === 'zoom-in') {
-        gsap.set(wrapper, { scale: 0.92, transformOrigin: 'center center' });
-        gsap.to(wrapper, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-          delay: 0.05,
-        });
-      } else if (data.type === 'zoom-out') {
-        gsap.set(wrapper, { scale: 1.08 });
-        gsap.to(wrapper, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-          delay: 0.05,
-        });
-      }
+      // Seamless transition handled the animation already; just show the page
+      gsap.set(wrapper, { opacity: 1, x: '0%', scale: 1 });
     } else {
       gsap.set(wrapper, { opacity: 0 });
       gsap.to(wrapper, {
@@ -459,7 +430,74 @@
       });
     }
 
-    // --- Intercept navigation links for zoom transition ---
+    // --- Prefetch and seamless transition ---
+    function seamlessNavigate(href, isHome, isBack) {
+      // Fetch the next page HTML
+      fetch(href)
+        .then(function (res) { return res.text(); })
+        .then(function (html) {
+          // Parse the fetched page
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(html, 'text/html');
+          var newContent = doc.querySelector('.page-transition-wrapper');
+
+          if (!newContent) {
+            // Fallback: just navigate
+            window.location.href = href;
+            return;
+          }
+
+          // Collect inline styles from the new page's <head>
+          var newStyles = doc.querySelectorAll('head style');
+          var styleContainer = document.createElement('div');
+          styleContainer.id = 'ev-transition-styles';
+          newStyles.forEach(function (s) {
+            var clone = document.createElement('style');
+            clone.textContent = s.textContent;
+            styleContainer.appendChild(clone);
+          });
+          document.head.appendChild(styleContainer);
+
+          // Create overlay with new page content
+          var overlay = document.createElement('div');
+          overlay.className = 'ev-page-overlay';
+          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;overflow-y:auto;pointer-events:none;';
+          overlay.innerHTML = newContent.innerHTML;
+          document.body.appendChild(overlay);
+
+          // Determine animation based on navigation type
+          var duration = 0.5;
+          var tl = gsap.timeline({
+            onComplete: function () {
+              sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'seamless' }));
+              window.location.href = href;
+            },
+          });
+
+          if (isHome) {
+            // Slide: current slides right, new slides in from left
+            gsap.set(overlay, { x: '-100%', opacity: 1 });
+            tl.to(wrapper, { x: '100%', duration: duration, ease: 'power3.inOut' }, 0);
+            tl.to(overlay, { x: '0%', duration: duration, ease: 'power3.inOut' }, 0);
+          } else if (isBack) {
+            // Back: current scales down, new fades/scales in from larger
+            gsap.set(overlay, { scale: 1.06, opacity: 0 });
+            tl.to(wrapper, { scale: 0.92, opacity: 0, duration: 0.45, ease: 'power2.inOut' }, 0);
+            tl.to(overlay, { scale: 1, opacity: 1, duration: 0.45, ease: 'power2.inOut' }, 0.05);
+          } else {
+            // Forward: current scales up/fades, new scales up from smaller
+            gsap.set(overlay, { scale: 0.94, opacity: 0 });
+            tl.to(wrapper, { scale: 1.05, opacity: 0, duration: 0.45, ease: 'power2.inOut' }, 0);
+            tl.to(overlay, { scale: 1, opacity: 1, duration: 0.45, ease: 'power2.inOut' }, 0.05);
+          }
+        })
+        .catch(function () {
+          // Fetch failed, fall back to direct navigation
+          window.location.href = href;
+        });
+    }
+
+    // --- Intercept navigation links ---
     document.addEventListener('click', function (e) {
       var link = e.target.closest('a[href]');
       if (!link) return;
@@ -475,39 +513,7 @@
       var isBack = link.classList.contains('back-btn') || link.dataset.transition === 'back';
       var isHome = href === '/' || href === '/index.html';
 
-      // Home link uses slide, everything else uses zoom
-      if (isHome) {
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'slide' }));
-        gsap.to(wrapper, {
-          x: '100%',
-          duration: 0.5,
-          ease: 'power3.in',
-          onComplete: function () { window.location.href = href; },
-        });
-      } else {
-        var transType = isBack ? 'zoom-out' : 'zoom-in';
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: transType }));
-
-        var tl = gsap.timeline({
-          onComplete: function () { window.location.href = href; },
-        });
-
-        if (isBack) {
-          tl.to(wrapper, {
-            scale: 0.92,
-            opacity: 0,
-            duration: 0.4,
-            ease: 'power2.in',
-          });
-        } else {
-          tl.to(wrapper, {
-            scale: 1.05,
-            opacity: 0,
-            duration: 0.4,
-            ease: 'power2.in',
-          });
-        }
-      }
+      seamlessNavigate(href, isHome, isBack);
     });
   }
 
@@ -591,7 +597,7 @@
       });
     });
 
-    // Zoom-in click on section cards
+    // Zoom-in click on section cards (seamless prefetch)
     sections.forEach(function (sec) {
       var href = sec.dataset.href;
       if (!href) return;
@@ -601,21 +607,68 @@
         e.preventDefault();
         STATE.isTransitioning = true;
 
-        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'zoom-in' }));
-
-        var wrapper = document.querySelector('.home-wrapper') || document.body;
+        var homeWrapper = document.querySelector('.home-wrapper') || document.body;
         var rect = sec.getBoundingClientRect();
         var ox = rect.left + rect.width / 2;
         var oy = rect.top + rect.height / 2;
 
-        gsap.to(wrapper, {
-          scale: 1.5,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power3.in',
-          transformOrigin: ox + 'px ' + oy + 'px',
-          onComplete: function () { window.location.href = href; },
-        });
+        // Prefetch the target page
+        fetch(href)
+          .then(function (res) { return res.text(); })
+          .then(function (html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.querySelector('.page-transition-wrapper');
+
+            if (!newContent) {
+              window.location.href = href;
+              return;
+            }
+
+            // Inject new page styles
+            var newStyles = doc.querySelectorAll('head style');
+            var styleContainer = document.createElement('div');
+            styleContainer.id = 'ev-transition-styles';
+            newStyles.forEach(function (s) {
+              var clone = document.createElement('style');
+              clone.textContent = s.textContent;
+              styleContainer.appendChild(clone);
+            });
+            document.head.appendChild(styleContainer);
+
+            // Create overlay
+            var overlay = document.createElement('div');
+            overlay.className = 'ev-page-overlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;overflow-y:auto;pointer-events:none;';
+            overlay.innerHTML = newContent.innerHTML;
+            document.body.appendChild(overlay);
+
+            gsap.set(overlay, { scale: 0.94, opacity: 0 });
+
+            var tl = gsap.timeline({
+              onComplete: function () {
+                sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'seamless' }));
+                window.location.href = href;
+              },
+            });
+
+            tl.to(homeWrapper, {
+              scale: 1.5,
+              opacity: 0,
+              duration: 0.6,
+              ease: 'power3.in',
+              transformOrigin: ox + 'px ' + oy + 'px',
+            }, 0);
+            tl.to(overlay, {
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              ease: 'power2.out',
+            }, 0.15);
+          })
+          .catch(function () {
+            window.location.href = href;
+          });
       });
     });
   }
