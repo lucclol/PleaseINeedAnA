@@ -759,80 +759,6 @@
   }
 
   /* ==========================================================
-     13. CURSOR GLOW TRAIL (desktop only)
-     ========================================================== */
-  function initCursorTrail() {
-    // Skip on mobile / touch devices
-    if (window.innerWidth < 768 || 'ontouchstart' in window) return;
-
-    var trail = [];
-    var TRAIL_LENGTH = 20;
-    var mouse = { x: -100, y: -100 };
-    var canvas = document.createElement('canvas');
-    canvas.id = 'ev-cursor-trail';
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;pointer-events:none;';
-    document.body.appendChild(canvas);
-    var ctx = canvas.getContext('2d');
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    document.addEventListener('mousemove', function (e) {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
-    document.addEventListener('mouseleave', function () {
-      mouse.x = -100;
-      mouse.y = -100;
-    });
-
-    function drawTrail() {
-      trail.push({ x: mouse.x, y: mouse.y });
-      if (trail.length > TRAIL_LENGTH) trail.shift();
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (var i = 0; i < trail.length; i++) {
-        var t = trail[i];
-        if (t.x < 0) continue;
-        var progress = i / trail.length;
-        var alpha = progress * 0.35;
-        var radius = progress * 6 + 1;
-
-        // Outer glow
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, radius * 3, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(77, 184, 255, ' + (alpha * 0.15) + ')';
-        ctx.fill();
-
-        // Core dot
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(160, 220, 255, ' + alpha + ')';
-        ctx.fill();
-      }
-
-      // Head glow at current position
-      if (mouse.x > 0) {
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
-        var headGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 12);
-        headGrad.addColorStop(0, 'rgba(77, 184, 255, 0.15)');
-        headGrad.addColorStop(1, 'rgba(77, 184, 255, 0)');
-        ctx.fillStyle = headGrad;
-        ctx.fill();
-      }
-
-      requestAnimationFrame(drawTrail);
-    }
-    drawTrail();
-  }
-
-  /* ==========================================================
      14. AURORA / COMET GRADIENT ACCENTS
      ========================================================== */
   function initAuroraAccents() {
@@ -862,7 +788,6 @@
     initTransitions();
     initHomeSections();
     initMagnetic();
-    initCursorTrail();
     initAuroraAccents();
     initBgMusic();
 
