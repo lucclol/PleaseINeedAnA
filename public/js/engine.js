@@ -410,7 +410,7 @@
   function initTransitions() {
     if (typeof gsap === 'undefined') return;
 
-    var wrapper = document.querySelector('.page-transition-wrapper');
+    var wrapper = document.querySelector('.page-transition-wrapper') || document.querySelector('.home-wrapper');
     if (!wrapper) return;
 
     // --- Enter animation ---
@@ -419,12 +419,16 @@
       sessionStorage.removeItem('ev_transition');
       var data = JSON.parse(transData);
 
-      gsap.set(wrapper, { opacity: 0 });
-
-      if (data.type === 'slide' || data.type === 'seamless-slide') {
-        // Seamless slide already showed the preview; just reveal instantly
-        gsap.set(wrapper, { x: '0%', opacity: 1 });
+      if (data.type === 'slide') {
+        // Slide in from left immediately — no delay
+        gsap.set(wrapper, { x: '-100%', opacity: 1, visibility: 'visible' });
+        gsap.to(wrapper, {
+          x: '0%',
+          duration: 0.5,
+          ease: 'power3.out',
+        });
       } else if (data.type === 'zoom-in') {
+        gsap.set(wrapper, { opacity: 0 });
         gsap.set(wrapper, { scale: 0.92, transformOrigin: 'center center' });
         gsap.to(wrapper, {
           scale: 1,
@@ -434,6 +438,7 @@
           delay: 0.05,
         });
       } else if (data.type === 'zoom-out') {
+        gsap.set(wrapper, { opacity: 0 });
         gsap.set(wrapper, { scale: 1.08 });
         gsap.to(wrapper, {
           scale: 1,
@@ -443,7 +448,7 @@
           delay: 0.05,
         });
       }
-    } else {
+    } else if (wrapper.classList.contains('page-transition-wrapper')) {
       gsap.set(wrapper, { opacity: 0 });
       gsap.to(wrapper, {
         opacity: 1,
@@ -452,55 +457,6 @@
         ease: 'power2.out',
         delay: 0.05,
       });
-    }
-
-    // --- Seamless slide for home navigation ---
-    function seamlessSlide(href) {
-      fetch(href)
-        .then(function (res) { return res.text(); })
-        .then(function (html) {
-          var parser = new DOMParser();
-          var doc = parser.parseFromString(html, 'text/html');
-          var newContent = doc.querySelector('.page-transition-wrapper') || doc.querySelector('.home-wrapper');
-
-          if (!newContent) {
-            window.location.href = href;
-            return;
-          }
-
-          // Inject new page styles
-          var newStyles = doc.querySelectorAll('head style');
-          var styleContainer = document.createElement('div');
-          styleContainer.id = 'ev-transition-styles';
-          newStyles.forEach(function (s) {
-            var clone = document.createElement('style');
-            clone.textContent = s.textContent;
-            styleContainer.appendChild(clone);
-          });
-          document.head.appendChild(styleContainer);
-
-          // Create overlay with new page content
-          var overlay = document.createElement('div');
-          overlay.className = 'ev-page-overlay';
-          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;overflow-y:auto;pointer-events:none;';
-          overlay.innerHTML = newContent.innerHTML;
-          document.body.appendChild(overlay);
-
-          // Slide both simultaneously
-          var duration = 0.5;
-          gsap.set(overlay, { x: '-100%', opacity: 1 });
-          var tl = gsap.timeline({
-            onComplete: function () {
-              sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'seamless-slide' }));
-              window.location.href = href;
-            },
-          });
-          tl.to(wrapper, { x: '100%', duration: duration, ease: 'power3.inOut' }, 0);
-          tl.to(overlay, { x: '0%', duration: duration, ease: 'power3.inOut' }, 0);
-        })
-        .catch(function () {
-          window.location.href = href;
-        });
     }
 
     // --- Intercept navigation links ---
@@ -520,8 +476,14 @@
       var isHome = href === '/' || href === '/index.html';
 
       if (isHome) {
-        // Seamless slide for home navigation
-        seamlessSlide(href);
+        // Slide out right, then navigate (incoming page slides in from left)
+        sessionStorage.setItem('ev_transition', JSON.stringify({ type: 'slide' }));
+        gsap.to(wrapper, {
+          x: '100%',
+          duration: 0.4,
+          ease: 'power3.in',
+          onComplete: function () { window.location.href = href; },
+        });
       } else {
         // Original zoom transitions for everything else
         var transType = isBack ? 'zoom-out' : 'zoom-in';
