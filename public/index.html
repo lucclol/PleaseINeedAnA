@@ -309,29 +309,43 @@ function enterSite() {
   var hero = document.querySelector('.home-hero');
   var sections = document.getElementById('homeSections');
   var wrapper = document.querySelector('.home-wrapper');
+  var cards = sections.querySelectorAll('.section-card');
 
-  // Make sections visible but positioned fully off-screen right
+  // Make sections visible but positioned off-screen right
   sections.classList.add('visible');
-  gsap.set(sections, { x: '-100%' });
+  gsap.set(sections, { x: window.innerWidth });
 
-  // Slide hero right, sections in from left — matches page transitions
+  // Hide cards initially so they can stagger in
+  gsap.set(cards, { x: 80, opacity: 0 });
+
   var tl = gsap.timeline();
 
+  // Hero slides left
   tl.to(hero, {
-    x: '100%',
-    duration: 0.5,
+    x: -window.innerWidth,
+    duration: 0.8,
     ease: 'power3.inOut',
   }, 0);
 
+  // Sections wrapper slides in from right
   tl.to(sections, {
-    x: '0%',
-    duration: 0.5,
+    x: 0,
+    duration: 0.8,
     ease: 'power3.inOut',
     onComplete: function() {
       hero.style.display = 'none';
       wrapper.scrollTop = 0;
     }
   }, 0);
+
+  // Cards stagger slide in as the wrapper arrives
+  tl.to(cards, {
+    x: 0,
+    opacity: 1,
+    duration: 0.4,
+    ease: 'power2.out',
+    stagger: 0.06,
+  }, 0.45);
 }
 
 (function() {
