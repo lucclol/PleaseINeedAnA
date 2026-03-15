@@ -320,17 +320,17 @@ function enterSite() {
 
   var tl = gsap.timeline();
 
-  // Hero slides right
+  // Hero slides left
   tl.to(hero, {
-    x: '100%',
-    duration: 0.5,
+    x: -window.innerWidth,
+    duration: 0.8,
     ease: 'power3.inOut',
   }, 0);
 
   // Sections wrapper slides in from right
   tl.to(sections, {
     x: 0,
-    duration: 0.5,
+    duration: 0.8,
     ease: 'power3.inOut',
     onComplete: function() {
       hero.style.display = 'none';
@@ -345,7 +345,7 @@ function enterSite() {
     duration: 0.4,
     ease: 'power2.out',
     stagger: 0.06,
-  }, 0.25);
+  }, 0.45);
 }
 
 (function() {
