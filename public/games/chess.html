@@ -262,6 +262,11 @@
       <button class="mode-btn active" onclick="setMode('ai')" id="modeAi">vs Computer</button>
       <button class="mode-btn" onclick="setMode('2p')" id="mode2p">2 Player</button>
     </div>
+    <div class="mode-select" id="difficultySelect">
+      <button class="mode-btn" onclick="setDifficulty('easy')" id="diffEasy">Easy</button>
+      <button class="mode-btn active" onclick="setDifficulty('medium')" id="diffMedium">Medium</button>
+      <button class="mode-btn" onclick="setDifficulty('hard')" id="diffHard">Hard</button>
+    </div>
 
     <div class="captured-pieces" id="capturedBlack"></div>
     <div class="status-bar" id="statusBar">White to move</div>
@@ -305,9 +310,10 @@
 
 // Piece representation: lowercase = black, uppercase = white
 // K Q R B N P / k q r b n p, '' = empty
+// Filled glyphs for white (so they look solid/light), outlined for black
 const PIECES = {
-  K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
-  k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟',
+  K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟',
+  k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙',
 };
 
 const PIECE_VALUES = { p:100, n:320, b:330, r:500, q:900, k:20000 };
@@ -384,6 +390,7 @@ let moveHistory = [];
 let castleRights = { K:true, Q:true, k:true, q:true }; // kingside/queenside
 let enPassant = null; // target square [r,c] or null
 let gameMode = 'ai'; // 'ai' or '2p'
+let difficulty = 'medium'; // 'easy', 'medium', 'hard'
 let gameOver = false;
 let flipped = false;
 let capturedByWhite = [];
@@ -669,13 +676,34 @@ function minimax(bd, cr, ep, depth, alpha, beta, maximizing, color) {
   }
 }
 
+function getAiDepth() {
+  if (difficulty === 'easy') return 1;
+  if (difficulty === 'hard') return 4;
+  return 3; // medium
+}
+
 function aiMove() {
   if (gameOver || turn !== 'b') return;
   const statusBar = document.getElementById('statusBar');
   statusBar.textContent = 'Thinking...';
 
   setTimeout(() => {
-    const result = minimax(board, castleRights, enPassant, 3, -Infinity, Infinity, false, 'b');
+    const depth = getAiDepth();
+    let result;
+
+    if (difficulty === 'easy') {
+      // Easy: shallow search + 30% chance of random legal move
+      const moves = allLegalMoves('b', board, castleRights, enPassant);
+      if (moves.length === 0) return;
+      if (Math.random() < 0.3) {
+        result = { move: moves[Math.floor(Math.random() * moves.length)] };
+      } else {
+        result = minimax(board, castleRights, enPassant, depth, -Infinity, Infinity, false, 'b');
+      }
+    } else {
+      result = minimax(board, castleRights, enPassant, depth, -Infinity, Infinity, false, 'b');
+    }
+
     if (result.move) {
       executeMove(result.move);
     }
@@ -926,6 +954,15 @@ function setMode(mode) {
   gameMode = mode;
   document.getElementById('modeAi').classList.toggle('active', mode === 'ai');
   document.getElementById('mode2p').classList.toggle('active', mode === '2p');
+  document.getElementById('difficultySelect').style.display = mode === 'ai' ? 'flex' : 'none';
+  resetGame();
+}
+
+function setDifficulty(level) {
+  difficulty = level;
+  document.getElementById('diffEasy').classList.toggle('active', level === 'easy');
+  document.getElementById('diffMedium').classList.toggle('active', level === 'medium');
+  document.getElementById('diffHard').classList.toggle('active', level === 'hard');
   resetGame();
 }
 
