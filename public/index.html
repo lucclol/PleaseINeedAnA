@@ -312,24 +312,23 @@ function enterSite() {
 
   // Make sections visible but positioned fully off-screen right
   sections.classList.add('visible');
-  gsap.set(sections, { x: window.innerWidth });
+  gsap.set(sections, { x: '-100%' });
 
-  // Slide hero and sections together — hero goes left, sections come from right
+  // Slide hero right, sections in from left — matches page transitions
   var tl = gsap.timeline();
 
   tl.to(hero, {
-    x: -window.innerWidth,
-    duration: 0.8,
+    x: '100%',
+    duration: 0.5,
     ease: 'power3.inOut',
   }, 0);
 
   tl.to(sections, {
-    x: 0,
-    duration: 0.8,
+    x: '0%',
+    duration: 0.5,
     ease: 'power3.inOut',
     onComplete: function() {
       hero.style.display = 'none';
-      // Scroll to top of sections
       wrapper.scrollTop = 0;
     }
   }, 0);
